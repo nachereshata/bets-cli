@@ -103,7 +103,18 @@ def test_create_match_from_text_line():
     assert _match[IDX_2] == 2.50
 
 
-def test_create_list_of_matches_from_text():
+def test_parse_matches_from_text_raises_type_error_if_not_string():
+    with pytest.raises(TypeError):
+        match.parse_text(1)
+    with pytest.raises(TypeError):
+        match.parse_text(object())
+    with pytest.raises(TypeError):
+        match.parse_text(None)
+    with pytest.raises(TypeError):
+        match.parse_text([])
+
+
+def test_parse_matches_from_text_returns_list_of_matches():
     text = """
     
     Barcelona - Liverpool 2.34 3.40 2.5
