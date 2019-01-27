@@ -13,10 +13,17 @@ def test_match_is_represented_as_tuple():
 
 
 def test_match_index_values():
-    assert IDX_TITLE == 0
-    assert IDX_1 == 1
-    assert IDX_X == 2
-    assert IDX_2 == 3
+    assert match.IDX_TITLE == 0
+    assert match.IDX_1 == 1
+    assert match.IDX_X == 2
+    assert match.IDX_2 == 3
+
+
+def test_test_indexes_are_properly_set():
+    assert IDX_TITLE == match.IDX_TITLE
+    assert IDX_1 == match.IDX_1
+    assert IDX_X == match.IDX_X
+    assert IDX_2 == match.IDX_2
 
 
 def test_match_values_at_positions():
