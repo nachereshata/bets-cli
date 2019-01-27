@@ -44,3 +44,12 @@ def test_create_match_with_string_ratios():
     assert _match[IDX_1] == 1.2
     assert _match[IDX_X] == 2.2
     assert _match[IDX_2] == 1.83
+
+
+def test_create_match_from_text_line():
+    text_line = "Barcelona - Liverpool 2.34 3.40 2.5"
+    _match = match.parse_line(text_line)
+    assert _match[IDX_TITLE] == "Barcelona - Liverpool"
+    assert _match[IDX_1] == 2.34
+    assert _match[IDX_X] == 3.40
+    assert _match[IDX_2] == 2.50
