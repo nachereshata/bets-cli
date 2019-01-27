@@ -228,3 +228,56 @@ def test_parse_file_returns_list_of_matches_when_in_file():
     assert _matches[1][IDX_1] == 2.78
     assert _matches[1][IDX_X] == 3.90
     assert _matches[1][IDX_2] == 3.50
+
+
+def test_get_outcome_ratios():
+    _match = match.parse_line("Barcelona - Liverpool 2.34 3.40 2.5")
+    assert match.get_outcomes_ratios(_match) == (2.34, 3.40, 2.5)
+
+
+def test_get_sorted_ratios():
+    _match = match.parse_line("Barcelona - Liverpool 2.34 3.40 2.5")
+    assert match.get_sorted_ratios(_match) == (2.34, 2.5, 3.40)
+
+
+def test_get_ranks_outcomes_returns_tuple_of_3_strings():
+    _match = match.parse_line("Barcelona - Liverpool 2.34 3.40 2.5")
+    _ranks = match.get_ranks_outcomes(_match)
+    assert isinstance(_ranks, tuple)
+    assert len(_ranks) == 3
+    for rank in _ranks:
+        assert isinstance(rank, str)
+
+
+def test_get_ranks_outcomes():
+    _match = match.parse_line("Barcelona - Liverpool 2.34 3.40 2.5")
+    expected_outcomes = tuple("1 2 X".split(" "))
+    actual_outcomes = match.get_ranks_outcomes(_match)
+    assert actual_outcomes == expected_outcomes
+
+    _match2 = match.parse_line("Man utd. - Arsenal 2.5 3.9 2.5")
+    expected_outcomes2 = tuple("1/2 1/2 X".split(" "))
+    actual_outcomes2 = match.get_ranks_outcomes(_match2)
+    assert actual_outcomes2 == expected_outcomes2
+
+    _match3 = match.parse_line("Man utd. - Arsenal 2.5 2.9 2.9")
+    expected_outcomes3 = tuple("1 X/2 X/2".split(" "))
+    actual_outcomes3 = match.get_ranks_outcomes(_match3)
+    assert actual_outcomes3 == expected_outcomes3
+
+
+def test_get_outcome_ranks():
+    _match = match.parse_line("Barcelona - Liverpool 2.34 3.40 2.5")
+    expected_outcomes = tuple("min max med".split(" "))
+    actual_outcomes = match.get_outcome_ranks(_match)
+    assert actual_outcomes == expected_outcomes
+
+    _match2 = match.parse_line("Man utd. - Arsenal 2.5 3.9 2.5")
+    expected_outcomes2 = tuple("min/med max min/med".split(" "))
+    actual_outcomes2 = match.get_outcome_ranks(_match2)
+    assert actual_outcomes2 == expected_outcomes2
+
+    _match3 = match.parse_line("Man utd. - Arsenal 2.5 2.9 2.9")
+    expected_outcomes3 = tuple("min med/max med/max".split(" "))
+    actual_outcomes3 = match.get_outcome_ranks(_match3)
+    assert actual_outcomes3 == expected_outcomes3
