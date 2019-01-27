@@ -181,7 +181,7 @@ def test_parse_text_raises_value_error_if_no_matches_in_text():
         """)
 
 
-def test_parse_file_raises_type_error_if_not_string():
+def test_parse_file_raises_type_error_if_file_path_not_string():
     with pytest.raises(TypeError):
         match.parse_file(1)
     with pytest.raises(TypeError):
@@ -192,7 +192,7 @@ def test_parse_file_raises_type_error_if_not_string():
         match.parse_file(object())
 
 
-def test_parse_file_raises_value_error_if_empty_string():
+def test_parse_file_raises_value_error_if_file_path_empty_string():
     with pytest.raises(ValueError):
         match.parse_file("")
 

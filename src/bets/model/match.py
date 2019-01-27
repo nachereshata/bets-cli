@@ -1,4 +1,5 @@
 import logging
+from typing import List
 
 from bets.utils.num_utils import parse_float
 
@@ -62,7 +63,7 @@ def parse_line(line: str):
     return new_match(title, r1, rx, r2)
 
 
-def parse_text(text: str):
+def parse_text(text: str) -> List[tuple]:
     if not isinstance(text, str):
         raise TypeError("Expected string!")
 
@@ -83,3 +84,16 @@ def parse_text(text: str):
         raise ValueError("The text did not contain any matches!", text)
 
     return matches
+
+
+def parse_file(file_path: str) -> List[tuple]:
+    if not isinstance(file_path, str):
+        raise TypeError("Expected string")
+
+    if not file_path:
+        raise ValueError("Expected non-empty string")
+
+    with open(file_path, "rb") as fp:
+        text = fp.read().decode("utf-8")
+
+    return parse_text(text)
