@@ -1,0 +1,4 @@
+COMMA = ","
+DOT = "."
+EMPTY = ""
+SPACE = " "
