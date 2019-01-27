@@ -52,7 +52,7 @@ def parse_line(line: str):
     if not line:
         raise ValueError("Expected non-empty string!")
 
-    line_parts = line.strip().split()
+    line_parts = line.strip().split(" ")
     if len(line_parts) < 4:
         raise ValueError("Line should contain at least 4 space-separated parts!")
 
@@ -60,3 +60,26 @@ def parse_line(line: str):
     r1, rx, r2 = line_parts[-3:]
 
     return new_match(title, r1, rx, r2)
+
+
+def parse_text(text: str):
+    if not isinstance(text, str):
+        raise TypeError("Expected string!")
+
+    lines = [line.strip()
+             for line
+             in text.split("\n")
+             if line.strip()]
+
+    matches = []
+
+    for line in lines:
+        try:
+            matches.append(parse_line(line))
+        except ValueError:
+            continue
+
+    if not matches:
+        raise ValueError("The text did not contain any matches!", text)
+
+    return matches

@@ -103,7 +103,7 @@ def test_create_match_from_text_line():
     assert _match[IDX_2] == 2.50
 
 
-def test_parse_matches_from_text_raises_type_error_if_not_string():
+def test_parse_text_raises_type_error_if_not_string():
     with pytest.raises(TypeError):
         match.parse_text(1)
     with pytest.raises(TypeError):
@@ -114,7 +114,28 @@ def test_parse_matches_from_text_raises_type_error_if_not_string():
         match.parse_text([])
 
 
-def test_parse_matches_from_text_returns_list_of_matches():
+def test_parse_text_returns_list_of_single_match_when_one():
+    text = """
+
+    Barcelona - Liverpool 2.34 3.40 2.5
+    2134
+    
+    not a match pal
+    """
+
+    _matches = match.parse_text(text)
+    assert isinstance(_matches, list)
+    assert len(_matches) == 1
+
+    _match = _matches[0]
+    assert match.is_match(_match)
+    assert _match[IDX_TITLE] == "Barcelona - Liverpool"
+    assert _match[IDX_1] == 2.34
+    assert _match[IDX_X] == 3.40
+    assert _match[IDX_2] == 2.5
+
+
+def test_parse_text_returns_list_of_matches_when_many():
     text = """
     
     Barcelona - Liverpool 2.34 3.40 2.5
@@ -138,3 +159,19 @@ def test_parse_matches_from_text_returns_list_of_matches():
     assert _matches[1][IDX_1] == 2.78
     assert _matches[1][IDX_X] == 3.90
     assert _matches[1][IDX_2] == 3.50
+
+
+def test_parse_text_raises_value_error_if_no_matches_in_text():
+    with pytest.raises(ValueError):
+        match.parse_text("")
+
+    with pytest.raises(ValueError):
+        match.parse_text("""
+        no
+        matches here
+        pal
+        """)
+    with pytest.raises(ValueError):
+        match.parse_text("""
+        no matches here too
+        """)
