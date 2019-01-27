@@ -101,3 +101,29 @@ def test_create_match_from_text_line():
     assert _match[IDX_1] == 2.34
     assert _match[IDX_X] == 3.40
     assert _match[IDX_2] == 2.50
+
+
+def test_create_list_of_matches_from_text():
+    text = """
+    
+    Barcelona - Liverpool 2.34 3.40 2.5
+    2134
+    Man utd. - Arsenal 2.78 3.9 3.5
+    123
+    """
+
+    _matches = match.parse_text(text)
+    assert isinstance(_matches, list)
+    assert len(_matches) == 2
+
+    for _match in _matches:
+        assert match.is_match(_match)
+
+    assert _matches[0][IDX_TITLE] == "Barcelona - Liverpool"
+    assert _matches[0][IDX_1] == 2.34
+    assert _matches[0][IDX_X] == 3.40
+    assert _matches[0][IDX_2] == 2.5
+    assert _matches[1][IDX_TITLE] == "Man utd. - Arsenal"
+    assert _matches[1][IDX_1] == 2.78
+    assert _matches[1][IDX_X] == 3.90
+    assert _matches[1][IDX_2] == 3.50
