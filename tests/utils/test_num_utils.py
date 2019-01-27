@@ -42,3 +42,6 @@ def test_parse_float_handles_string_float_with_thousands_comma_and_spaces():
 def test_parse_float_raises_value_error_when_not_parsed():
     with pytest.raises(ValueError):
         num_utils.parse_float(object())
+
+    with pytest.raises(ValueError):
+        num_utils.parse_float("xd,2")
