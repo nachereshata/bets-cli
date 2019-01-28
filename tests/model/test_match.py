@@ -1,47 +1,4 @@
-import pytest
-import tempfile
-
-from os import path
-from os import unlink
-
-from bets.model import match
-
-IDX_TITLE = match.IDX_TITLE
-IDX_1 = match.IDX_1
-IDX_X = match.IDX_X
-IDX_2 = match.IDX_2
-
-
-def test_match_is_represented_as_tuple():
-    assert isinstance(match.new_match("Man utd. - Arsenal", 1.2, 2.2, 1.8), tuple)
-
-
-def test_match_index_values():
-    assert match.IDX_TITLE == 0
-    assert match.IDX_1 == 1
-    assert match.IDX_X == 2
-    assert match.IDX_2 == 3
-
-
-def test_test_indexes_are_properly_set():
-    assert IDX_TITLE == match.IDX_TITLE
-    assert IDX_1 == match.IDX_1
-    assert IDX_X == match.IDX_X
-    assert IDX_2 == match.IDX_2
-
-
-def test_match_values_at_positions():
-    title = "Man utd. - Arsenal"
-    ratio_1 = 1.2
-    ratio_x = 2.2
-    ratio_2 = 1.8
-
-    _match = match.new_match(title, ratio_1, ratio_x, ratio_2)
-
-    assert title == _match[IDX_TITLE]
-    assert ratio_1 == _match[IDX_1]
-    assert ratio_x == _match[IDX_X]
-    assert ratio_2 == _match[IDX_2]
+from bets.model.match import Match
 
 
 def test_create_match_with_string_ratios():
@@ -50,234 +7,65 @@ def test_create_match_with_string_ratios():
     ratio_x = "2,2"
     ratio_2 = " 1.83"
 
-    _match = match.new_match(title, ratio_1, ratio_x, ratio_2)
-    assert _match[IDX_TITLE] == title
-    assert _match[IDX_1] == 1.2
-    assert _match[IDX_X] == 2.2
-    assert _match[IDX_2] == 1.83
-
-
-def test_parse_line_accepts_only_string():
-    with pytest.raises(TypeError):
-        match.parse_line(None)
-
-    with pytest.raises(TypeError):
-        match.parse_line([])
-
-    with pytest.raises(TypeError):
-        match.parse_line(object())
-
-    with pytest.raises(TypeError):
-        match.parse_line(1)
-
-
-def test_parse_line_raises_value_error_on_empty_string():
-    with pytest.raises(ValueError):
-        match.parse_line("")
-
-
-def test_parse_line_raises_value_error_on_line_with_less_than_4_parts():
-    with pytest.raises(ValueError):
-        match.parse_line("1 2 3")
-
-
-def test_is_match_returns_correct_result():
-    # a valid match is a tuple with format: [str, float, float, float]
-    assert isinstance(match.is_match(None), bool)
-    assert match.is_match(("title", 2.4, 1.5, 6.3))
-    assert match.is_match(("longer - title", 2.4, 1.50, 6.3))
-    assert not match.is_match(["longer - title", 2.4, 1.50, 6.3])
-    assert not match.is_match({"longer - title", 2.4, 1.50, 6.3})
-    assert not match.is_match(("longer - title", 2.4, 1.50, 6))
-    assert not match.is_match(("longer - title", 2.4, 1, 6.3))
-    assert not match.is_match(("longer - title", 2, 1.6, 6.3))
-    assert not match.is_match(({}, 2, 1.6, 6.3))
-    assert not match.is_match((None, 2, 1.6, 6.3))
-    assert not match.is_match((None, 2, 1.6, 6.3))
-    assert not match.is_match((None, 2.4, 6.3))
-
-
-def test_create_match_from_text_line():
-    text_line = "Barcelona - Liverpool 2.34 3.40 2.5"
-    _match = match.parse_line(text_line)
-    assert match.is_match(_match)
-    assert _match[IDX_TITLE] == "Barcelona - Liverpool"
-    assert _match[IDX_1] == 2.34
-    assert _match[IDX_X] == 3.40
-    assert _match[IDX_2] == 2.50
-
-
-def test_parse_text_raises_type_error_if_not_string():
-    with pytest.raises(TypeError):
-        match.parse_text(1)
-    with pytest.raises(TypeError):
-        match.parse_text(object())
-    with pytest.raises(TypeError):
-        match.parse_text(None)
-    with pytest.raises(TypeError):
-        match.parse_text([])
-
-
-def test_parse_text_returns_list_of_single_match_when_one():
-    text = """
-
-    Barcelona - Liverpool 2.34 3.40 2.5
-    2134
-    
-    not a match pal
-    """
-
-    _matches = match.parse_text(text)
-    assert isinstance(_matches, list)
-    assert len(_matches) == 1
-
-    _match = _matches[0]
-    assert match.is_match(_match)
-    assert _match[IDX_TITLE] == "Barcelona - Liverpool"
-    assert _match[IDX_1] == 2.34
-    assert _match[IDX_X] == 3.40
-    assert _match[IDX_2] == 2.5
-
-
-def test_parse_text_returns_list_of_matches_when_many():
-    text = """
-    
-    Barcelona - Liverpool 2.34 3.40 2.5
-    2134
-    Man utd. - Arsenal 2.78 3.9 3.5
-    123
-    """
-
-    _matches = match.parse_text(text)
-    assert isinstance(_matches, list)
-    assert len(_matches) == 2
-
-    for _match in _matches:
-        assert match.is_match(_match)
-
-    assert _matches[0][IDX_TITLE] == "Barcelona - Liverpool"
-    assert _matches[0][IDX_1] == 2.34
-    assert _matches[0][IDX_X] == 3.40
-    assert _matches[0][IDX_2] == 2.5
-    assert _matches[1][IDX_TITLE] == "Man utd. - Arsenal"
-    assert _matches[1][IDX_1] == 2.78
-    assert _matches[1][IDX_X] == 3.90
-    assert _matches[1][IDX_2] == 3.50
-
-
-def test_parse_text_raises_value_error_if_no_matches_in_text():
-    with pytest.raises(ValueError):
-        match.parse_text("")
-
-    with pytest.raises(ValueError):
-        match.parse_text("""
-        no
-        matches here
-        pal
-        """)
-    with pytest.raises(ValueError):
-        match.parse_text("""
-        no matches here too
-        """)
-
-
-def test_parse_file_raises_type_error_if_file_path_not_string():
-    with pytest.raises(TypeError):
-        match.parse_file(1)
-    with pytest.raises(TypeError):
-        match.parse_file(None)
-    with pytest.raises(TypeError):
-        match.parse_file([])
-    with pytest.raises(TypeError):
-        match.parse_file(object())
-
-
-def test_parse_file_raises_value_error_if_file_path_empty_string():
-    with pytest.raises(ValueError):
-        match.parse_file("")
-
-
-def test_parse_file_returns_list_of_matches_when_in_file():
-    text = """
-        Barcelona - Liverpool 2.34 3.40 2.5
-        2134
-        Man utd. - Arsenal 2.78 3.9 3.5
-        123
-        """
-
-    file_path = path.join(tempfile.gettempdir(), "matches.txt")
-
-    with open(file_path, "wb") as fp:
-        fp.write(text.encode("utf-8"))
-
-    _matches = match.parse_file(file_path)
-
-    unlink(file_path)
-
-    assert isinstance(_matches, list)
-    assert len(_matches) == 2
-
-    for _match in _matches:
-        assert match.is_match(_match)
-
-    assert _matches[0][IDX_TITLE] == "Barcelona - Liverpool"
-    assert _matches[0][IDX_1] == 2.34
-    assert _matches[0][IDX_X] == 3.40
-    assert _matches[0][IDX_2] == 2.5
-    assert _matches[1][IDX_TITLE] == "Man utd. - Arsenal"
-    assert _matches[1][IDX_1] == 2.78
-    assert _matches[1][IDX_X] == 3.90
-    assert _matches[1][IDX_2] == 3.50
+    _match = Match(title, ratio_1, ratio_x, ratio_2)
+    assert _match.title == title
+    assert _match.ratio_1 == 1.2
+    assert _match.ratio_x == 2.2
+    assert _match.ratio_2 == 1.83
 
 
 def test_get_outcome_ratios():
-    _match = match.parse_line("Barcelona - Liverpool 2.34 3.40 2.5")
-    assert match.get_outcomes_ratios(_match) == (2.34, 3.40, 2.5)
+    _match = Match("Barcelona - Liverpool", 2.34, 3.40, 2.5)
+    assert tuple(_match.ratios.values()) == (2.34, 3.40, 2.5)
 
 
-def test_get_sorted_ratios():
-    _match = match.parse_line("Barcelona - Liverpool 2.34 3.40 2.5")
-    assert match.get_sorted_ratios(_match) == (2.34, 2.5, 3.40)
+def test_match_eq():
+    _match = Match("Barcelona - Liverpool", 2.34, 3.40, 2.5)
+    _match2 = Match("Barcelona - Liverpool", 2.34, 3.40, 2.5)
+    assert _match == _match
+    assert _match == _match2
+    assert not _match == None
+    assert not _match == 0
+    assert not _match == []
 
 
-def test_get_ranks_outcomes_returns_tuple_of_3_strings():
-    _match = match.parse_line("Barcelona - Liverpool 2.34 3.40 2.5")
-    _ranks = match.get_ranks_outcomes(_match)
-    assert isinstance(_ranks, tuple)
-    assert len(_ranks) == 3
-    for rank in _ranks:
-        assert isinstance(rank, str)
+def test_ranks_outcomes():
+    _match = Match("Barcelona - Liverpool", 2.34, 3.40, 2.5)
+    for rank, outcomes in _match.ranks_outcomes.items():
+        assert rank in {"min", "med", "max"}
+        for o in outcomes.split("/"):
+            assert o in "1X2"
 
 
 def test_get_ranks_outcomes():
-    _match = match.parse_line("Barcelona - Liverpool 2.34 3.40 2.5")
+    _match = Match("Barcelona - Liverpool", 2.34, 3.40, 2.5)
     expected_outcomes = tuple("1 2 X".split(" "))
-    actual_outcomes = match.get_ranks_outcomes(_match)
+    actual_outcomes = tuple(_match.ranks_outcomes.values())
     assert actual_outcomes == expected_outcomes
 
-    _match2 = match.parse_line("Man utd. - Arsenal 2.5 3.9 2.5")
+    _match2 = Match("Man utd. - Arsenal", 2.5, 3.9, 2.5)
     expected_outcomes2 = tuple("1/2 1/2 X".split(" "))
-    actual_outcomes2 = match.get_ranks_outcomes(_match2)
+    actual_outcomes2 = tuple(_match2.ranks_outcomes.values())
     assert actual_outcomes2 == expected_outcomes2
 
-    _match3 = match.parse_line("Man utd. - Arsenal 2.5 2.9 2.9")
+    _match3 = Match("Man utd. - Arsenal", 2.5, 2.9, 2.9)
     expected_outcomes3 = tuple("1 X/2 X/2".split(" "))
-    actual_outcomes3 = match.get_ranks_outcomes(_match3)
+    actual_outcomes3 = tuple(_match3.ranks_outcomes.values())
     assert actual_outcomes3 == expected_outcomes3
 
 
 def test_get_outcome_ranks():
-    _match = match.parse_line("Barcelona - Liverpool 2.34 3.40 2.5")
+    _match = Match("Barcelona - Liverpool", 2.34, 3.40, 2.5)
     expected_outcomes = tuple("min max med".split(" "))
-    actual_outcomes = match.get_outcome_ranks(_match)
+    actual_outcomes = tuple(_match.outcome_ranks.values())
     assert actual_outcomes == expected_outcomes
 
-    _match2 = match.parse_line("Man utd. - Arsenal 2.5 3.9 2.5")
+    _match2 = Match("Man utd. - Arsenal", 2.5, 3.9, 2.5)
     expected_outcomes2 = tuple("min/med max min/med".split(" "))
-    actual_outcomes2 = match.get_outcome_ranks(_match2)
+    actual_outcomes2 = tuple(_match2.outcome_ranks.values())
     assert actual_outcomes2 == expected_outcomes2
 
-    _match3 = match.parse_line("Man utd. - Arsenal 2.5 2.9 2.9")
+    _match3 = Match("Man utd. - Arsenal", 2.5, 2.9, 2.9)
     expected_outcomes3 = tuple("min med/max med/max".split(" "))
-    actual_outcomes3 = match.get_outcome_ranks(_match3)
+    actual_outcomes3 = tuple(_match3.outcome_ranks.values())
     assert actual_outcomes3 == expected_outcomes3

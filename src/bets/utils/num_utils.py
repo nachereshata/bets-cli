@@ -1,35 +1,40 @@
 import logging
 
-from bets.utils.constants import (
-    COMMA,
-    DOT,
-    EMPTY,
-    SPACE
-)
+from itertools import product
+from typing import Iterable, Union
 
 _log = logging.getLogger(__name__)
 
 
 def parse_float(value) -> float:
-    """Helper method to convert values to floats"""
-
+    _log.debug("parsing [{}] to float...".format(value))
     try:
         return float(value)
-
     except (ValueError, TypeError):
-
         if isinstance(value, str):
-            value = value.strip().replace(SPACE, EMPTY)
+            value = value.strip().replace(" ", "")
 
             try:
                 return float(value)
 
             except (ValueError, TypeError):
-                if COMMA in value:
+                if "," in value:
+                    if "." in value:
+                        return float(value.replace(",", ""))
 
-                    if DOT in value:
-                        return float(value.replace(COMMA, EMPTY))
-
-                    return float(value.replace(COMMA, DOT))
+                    return float(value.replace(",", "."))
 
         raise ValueError(f"Could not parse value to float", value)
+
+
+def generate_variations(items, length: int):
+    _log.info("generating all variations of size [{}] consisting of [{}]".format(length, items))
+    for variation in product(items, repeat=length):
+        yield variation
+
+
+def multiply_all(items: Iterable[Union[int, float]]):
+    result = 1
+    for i in items:
+        result = result * i
+    return result
