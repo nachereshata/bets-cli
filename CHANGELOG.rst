@@ -21,3 +21,8 @@ Version 2.0.0
 
 - Refactored contents
 - Improved usability
+
+Version 2.0.1
+=============
+
+- Optimized way scenarios are generated

@@ -106,11 +106,11 @@ def _action_scenarios(in_file, in_fmt, out_dest, out_fmt):
     MatchesOutput.write_matches(matches, "console", "plain")
 
     print("generating scenarios...")
-    scenarios_generator = ScenariosGenerator(matches)
-    print("got total of [{}] scenarios".format(len(scenarios_generator.scenarios)))
+    scenarios = list(ScenariosGenerator(matches).generate_scenarios())
+    print("got total of [{}] scenarios".format(len(scenarios)))
 
     print("writing scenarios to ({})[{}]...".format(out_fmt, out_dest))
-    ScenariosOutput.write_scenarios(scenarios_generator.scenarios, out_dest, out_fmt)
+    ScenariosOutput.write_scenarios(scenarios, out_dest, out_fmt)
     print("Done writing scenarios to ({})[{}]...".format(out_fmt, out_dest))
 
 

@@ -41,5 +41,5 @@ class ScenariosOutput:
             fp.write(text.encode("utf-8"))
 
     @classmethod
-    def write_scenarios(cls, scenarios, out_dest, out_fmt):
+    def write_scenarios(cls, scenarios: List[dict], out_dest, out_fmt):
         ScenariosOutput(scenarios, out_dest, out_fmt).write()

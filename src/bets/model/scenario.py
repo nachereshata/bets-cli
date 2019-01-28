@@ -1,10 +1,6 @@
 import logging
 from typing import List
 
-from pandas import (
-    DataFrame,
-)
-
 from bets.model.match import Match
 
 from bets.utils.num_utils import (
@@ -30,9 +26,6 @@ class ScenariosGenerator:
         self.ranks_counts = list(self._generate_ranks_counts())
         self.outcomes_counts = list(self._generate_outcomes_counts())
         self.total_ratios = list(self._generate_total_ratios())
-        self.scenarios = list(self.generate_scenarios())
-        self.columns = list(self.scenarios[0].keys())
-        self.data = DataFrame(self.scenarios, columns=self.columns)
 
     def _generate_scenarios_outcomes(self):
         for scenario_outcomes in self.outcomes:
