@@ -8,6 +8,24 @@ from tabulate import tabulate
 _log = logging.getLogger(__name__)
 
 
+def fmt_to_table(scenarios: List[dict], tablefmt: str) -> str:
+    return tabulate(scenarios,
+                    headers="keys",
+                    floatfmt=".2f",
+                    stralign="center",
+                    tablefmt=tablefmt)
+
+
+def fmt_to_csv(scenarios: List[dict]):
+    return DataFrame(
+        scenarios,
+        columns=list(scenarios[0].keys())
+    ).to_csv(
+        columns=list(scenarios[0].keys()),
+        float_format="%.2f"
+    )
+
+
 class ScenariosOutput:
     VALID_FORMATS = {"csv", "plain", "fancy_grid"}
 
@@ -19,26 +37,18 @@ class ScenariosOutput:
         self.out_dest = out_dest
         self.out_fmt = out_fmt
 
-    def _fmt_to_table(self) -> str:
-        return tabulate(self.scenarios,
-                        headers="keys",
-                        floatfmt=".2f",
-                        stralign="center",
-                        tablefmt=self.out_fmt)
-
-    def _fmt_to_csv(self) -> str:
-        return DataFrame(self.scenarios,
-                         columns=self.columns).to_csv(columns=self.columns, float_format="%.2f")
+    @property
+    def text(self):
+        return fmt_to_csv(self.scenarios) if (self.out_fmt == "csv") else fmt_to_table(self.scenarios, self.out_fmt)
 
     def write(self):
-        text = self._fmt_to_csv() if (self.out_fmt == "csv") else self._fmt_to_table()
 
         if self.out_dest == "console":
-            print(text)
+            print(self.text)
             return
 
         with Path(self.out_dest).open("wb") as fp:
-            fp.write(text.encode("utf-8"))
+            fp.write(self.text.encode("utf-8"))
 
     @classmethod
     def write_scenarios(cls, scenarios: List[dict], out_dest, out_fmt):

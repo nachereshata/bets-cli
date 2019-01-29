@@ -44,7 +44,7 @@ def parse_args(args):
 
     parser.add_argument("--out-dest",
                         dest="out_dest",
-                        help="Name of output destination. Can be set to a file, of defaults to 'console'",
+                        help="Name of output destination. Can be set to a file, or defaults to 'console'",
                         metavar="OUT_DEST",
                         default="console")
 
