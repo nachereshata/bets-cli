@@ -1,14 +1,17 @@
+import tkinter as tk
 from functools import partial
 from multiprocessing import Process
 from subprocess import call
-from typing import List
 from tkinter import Canvas, Frame, Label, LabelFrame, Scrollbar
-import tkinter as tk
 from tkinter.filedialog import asksaveasfilename
 from tkinter.messagebox import showwarning, showerror, askyesno
+from typing import List
+
 from tabulate import tabulate
+
 from bets.model.matches import Matches
 from bets.model.scenarios import Scenarios
+from bets.utils import log
 
 
 def _setup_canvas(table_frame, data: List[List[str]], column_widths: List[int] = None, height=200, width=None):
@@ -20,7 +23,7 @@ def _setup_canvas(table_frame, data: List[List[str]], column_widths: List[int] =
         cells_ipadx = len(column_widths) * 8  # inner padding
         # borders_width = len(column_widths)
         width = (cells_width + cells_ipadx)
-        print(f"width: {width}")
+        log.debug(f"got canvas width: {width}")
     canvas = Canvas(table_frame, borderwidth=0)
     canvas_frame = Frame(canvas)
     vsb = Scrollbar(table_frame, orient="vertical", command=canvas.yview)
@@ -55,13 +58,11 @@ def _get_columns_widths(data: List[List[str]]) -> List[int]:
     for row in data:
         for idx, cell in enumerate(row):
             widths[idx] = max(len(cell), widths[idx])
-    print(f"columns widths: {widths}")
+    log.debug(f"columns widths: {widths}")
     return widths
 
 
 def _OnFrameConfigure(canvas):
-    # Thread(target=partial(canvas.configure, scrollregion=canvas.bbox("all")), daemon=True).start()
-    # canvas.update_idletasks()
     canvas.configure(scrollregion=canvas.bbox("all"))
 
 
