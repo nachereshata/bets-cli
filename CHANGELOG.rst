@@ -26,3 +26,8 @@ Version 2.0.1
 =============
 
 - Optimized way scenarios are generated
+
+Version 3.0.0
+=============
+
+- Added UI app
