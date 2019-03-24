@@ -1,3 +1,4 @@
+import sys
 import tkinter as tk
 import tkinter.ttk as ttk
 
@@ -30,11 +31,17 @@ class BetsApp:
         self.menu_bar = MenuBar(self.win, self.matches)
 
 
-def main():
+def main(args):
     log.init()
     app = BetsApp()
     app.win.mainloop()
 
 
-if __name__ == '__main__':
-    main()
+def run():
+    """Entry point for console_scripts
+    """
+    main(sys.argv[1:])
+
+
+if __name__ == "__main__":
+    run()
