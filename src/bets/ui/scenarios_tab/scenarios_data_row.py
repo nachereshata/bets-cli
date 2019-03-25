@@ -6,8 +6,9 @@ import tkinter.ttk as ttk
 
 from more_itertools import circular_shifts
 
+from bets.model.matches import RANKS, OUTCOMES
 from bets.model.scenarios import Scenario, Scenarios
-from bets.ui.scenarios_tab.filter_frames import FromToFilterFrame
+from bets.ui.scenarios_tab.filter_frames import FromToFilterFrame, OccurrenceFilterFrame
 from bets.ui.table_frame import TableFrame
 from bets.utils import log
 
@@ -41,11 +42,9 @@ class ScenariosDataRow(ttk.LabelFrame):
         ttk.Button(view_frame, text="Delete", command=self.destroy).grid(column=0, row=1, padx=10, pady=5)
 
     def _create_range_filter(self, filter_frame):
-        outcomes = ("1", "X", "2")
-        ranks = ("min", "med", "max")
         range_filter_frame = FromToFilterFrame(filter_frame,
                                                text=" Range filter ",
-                                               combo_values=ranks + outcomes,
+                                               combo_values=RANKS + OUTCOMES,
                                                max_value=len(self.scenarios.matches))
         range_filter_frame.grid(column=0, row=0)
 
@@ -53,7 +52,7 @@ class ScenariosDataRow(ttk.LabelFrame):
             target = range_filter_frame.combo_box.get()
             count_from = int(range_filter_frame.spin_from.get())
             count_to = int(range_filter_frame.spin_to.get())
-            create_filter_func = outcomes_counts_filter if (target in outcomes) else ranks_counts_filter
+            create_filter_func = outcomes_counts_filter if (target in OUTCOMES) else ranks_counts_filter
             filter_func = create_filter_func(target, count_from, count_to)
             matching_scenarios = Scenarios(self.scenarios.matches, list(filter(filter_func, self.scenarios.scenarios)))
             title = f"Range({target})[{count_from} - {count_to}]"
@@ -61,54 +60,31 @@ class ScenariosDataRow(ttk.LabelFrame):
 
         range_filter_frame.apply_button["command"] = _apply_filter
 
-    def _create_sequential_outcomes_filter(self, filter_frame):
-        tk.Label(filter_frame, text="Outcomes: ").grid(column=0, row=2)
-        seq_combo = ttk.Combobox(filter_frame, width=5, values=("1", "X", "2"), state="readonly")
-        seq_combo.current(0)
-        seq_combo.grid(column=1, row=2)
-        tk.Label(filter_frame, text="No more than: ").grid(column=2, row=2)
-        spin_seq_outcomes = tk.Spinbox(filter_frame, width=5, from_=0, to=len(self.scenarios.matches), state="readonly")
-        spin_seq_outcomes.grid(column=3, row=2)
-        tk.Label(filter_frame, text="same outcomes in a row").grid(column=4, row=2, columnspan=2)
+    def _create_occurrence_filter(self, filter_frame):
+        occurrence_filter_frame = OccurrenceFilterFrame(filter_frame,
+                                                        text=" Sequential occurrences ",
+                                                        combo_values=RANKS + OUTCOMES,
+                                                        max_value=len(self.scenarios.matches))
+        occurrence_filter_frame.grid(column=1, row=0)
 
-        def _apply_seq_outcomes_filter():
-            outcome = seq_combo.get()
-            count = int(spin_seq_outcomes.get())
-            filter_func = outcomes_sequential_filter(outcome, count)
+        def _apply_filter():
+            target = occurrence_filter_frame.combo_box.get()
+            count = int(occurrence_filter_frame.spin_to.get())
+            create_filter_func = outcomes_sequential_filter if (target in OUTCOMES) else ranks_sequential_filter
+            filter_func = create_filter_func(target, count)
             matching_scenarios = Scenarios(self.scenarios.matches, list(filter(filter_func, self.scenarios.scenarios)))
-            title = f"Seq({outcome})[up to {count}]"
+            title = f"Seq({target})[up to {count} in a row]"
 
             ScenariosDataRow(self.parent, title, matching_scenarios).pack(side=tk.TOP, anchor=tk.W, fill=tk.X)
 
-        tk.Button(filter_frame, text="Add", command=_apply_seq_outcomes_filter).grid(column=6, row=2)
-
-    def _create_sequential_ranks_filter(self, filter_frame):
-        tk.Label(filter_frame, text="Ranks: ").grid(column=0, row=3)
-        seq_combo = ttk.Combobox(filter_frame, width=5, values=("min", "med", "max"), state="readonly")
-        seq_combo.current(0)
-        seq_combo.grid(column=1, row=3)
-        tk.Label(filter_frame, text="No more than: ").grid(column=2, row=3)
-        spin_seq_ranks = tk.Spinbox(filter_frame, width=5, from_=0, to=len(self.scenarios.matches), state="readonly")
-        spin_seq_ranks.grid(column=3, row=3)
-        tk.Label(filter_frame, text="same ranks in a row").grid(column=4, row=3, columnspan=2)
-
-        def _apply_seq_ranks_filter():
-            rank = seq_combo.get()
-            count = int(spin_seq_ranks.get())
-            filter_func = ranks_sequential_filter(rank, count)
-            matching_scenarios = Scenarios(self.scenarios.matches, list(filter(filter_func, self.scenarios.scenarios)))
-            title = f"Seq({rank})[up to {count}]"
-
-            ScenariosDataRow(self.parent, title, matching_scenarios).pack(side=tk.TOP, anchor=tk.W, fill=tk.X)
-
-        tk.Button(filter_frame, text="Add", command=_apply_seq_ranks_filter).grid(column=6, row=3)
+        occurrence_filter_frame.apply_button["command"] = _apply_filter
 
     def _create_filters(self):
         filter_frame = tk.LabelFrame(self, text=" Filters: ")
         filter_frame.pack(side=tk.LEFT, anchor=tk.N, padx=10, pady=5)
         self._create_range_filter(filter_frame)
-        self._create_sequential_outcomes_filter(filter_frame)
-        self._create_sequential_ranks_filter(filter_frame)
+        self._create_occurrence_filter(filter_frame)
+
         for child in filter_frame.winfo_children():
             child.grid_configure(padx=4, pady=2, sticky=tk.W)
 
