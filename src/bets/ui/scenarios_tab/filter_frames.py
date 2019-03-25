@@ -2,7 +2,7 @@ import tkinter as tk
 from tkinter import ttk
 
 
-class FromToFilterFrame(ttk.LabelFrame):
+class FromToFilterFrame(tk.LabelFrame):
 
     def __init__(self, parent, text: str, combo_values: tuple, max_value: int, min_value=0):
         super().__init__(parent, text=text)
