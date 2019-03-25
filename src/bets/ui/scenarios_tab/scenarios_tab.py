@@ -17,8 +17,8 @@ class ScenariosTab(tk.Frame):
         self.tabs.add(self, text="Scenarios")
         self.var_scenarios_count = tk.IntVar()
         self.var_scenarios_count.set(0)
-        self.gen_frame = tk.LabelFrame(self, text="Initial data")
-        self.gen_frame.pack(side=tk.TOP, fill=tk.X, expand=True, anchor=tk.N, padx=10, pady=5)
+        self.gen_frame = tk.LabelFrame(self, text=" Initial data ")
+        self.gen_frame.pack(side=tk.TOP, fill=tk.X, expand=True, anchor=tk.N, padx=4, pady=2)
         self.create_widgets()
 
     def _clear_views(self):
@@ -30,7 +30,11 @@ class ScenariosTab(tk.Frame):
         self._clear_views()
         self.scenarios = Scenarios.from_matches(self.matches)
         self.var_scenarios_count.set(len(self.scenarios))
-        ScenariosDataRow(self, "Initial", self.scenarios).pack(side=tk.TOP, fill=tk.X, anchor=tk.N, padx=10, pady=5)
+        ScenariosDataRow(self, "Initial", self.scenarios).pack(side=tk.TOP,
+                                                               fill=tk.X,
+                                                               expand=True,
+                                                               anchor=tk.N,
+                                                               padx=4, pady=2)
 
     def create_widgets(self):
         gen_btn = tk.Button(self.gen_frame, text="(Re)Generate Scenarios", command=self._generate_scenarios)

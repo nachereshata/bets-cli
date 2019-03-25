@@ -34,12 +34,30 @@ class ScenariosDataRow(ttk.LabelFrame):
         self.scenarios = scenarios
         self.create_widgets()
 
-    def _create_actions_frame(self):
-        view_frame = ttk.LabelFrame(self, text=" Actions: ")
-        view_frame.pack(side=tk.RIGHT, anchor="se", fill=tk.X, padx=10, pady=5)
+    def create_widgets(self):
+        self._create_filters()
+        self._create_actions()
 
-        ttk.Button(view_frame, text="View", command=self.view_as_grid).grid(column=0, row=0, padx=10, pady=5)
-        ttk.Button(view_frame, text="Delete", command=self.destroy).grid(column=0, row=1, padx=10, pady=5)
+    def _create_filters(self):
+        # filter_frame = tk.LabelFrame(self, text=" Filters: ")
+        filter_frame = tk.LabelFrame(self)
+        filter_frame.pack(side=tk.LEFT, anchor=tk.W, fill=tk.X)
+        self._create_range_filter(filter_frame)
+        self._create_occurrence_filter(filter_frame)
+
+        for child in filter_frame.winfo_children():
+            child.grid_configure(padx=4, pady=2, sticky=tk.W)
+
+    def _create_actions(self):
+        # actions_frame = tk.LabelFrame(self, text=" Actions: ")
+        actions_frame = tk.LabelFrame(self)
+        actions_frame.pack(side=tk.RIGHT, anchor=tk.W, fill=tk.BOTH)
+        save_frame = tk.LabelFrame(actions_frame, text=" Save as ")
+        save_frame.grid(column=0, row=0, padx=4, pady=2)
+        ttk.Button(save_frame, text="CSV", command=self.export_as_csv).grid(column=0, row=0, padx=2, pady=2)
+        ttk.Button(save_frame, text="TXT", command=self.export_as_grid).grid(column=1, row=0, padx=2, pady=2)
+        ttk.Button(actions_frame, text="Delete", command=self.destroy).grid(column=2, row=0, sticky="SE", padx=4,
+                                                                            pady=2)
 
     def _create_range_filter(self, filter_frame):
         range_filter_frame = FromToFilterFrame(filter_frame,
@@ -75,28 +93,20 @@ class ScenariosDataRow(ttk.LabelFrame):
             matching_scenarios = Scenarios(self.scenarios.matches, list(filter(filter_func, self.scenarios.scenarios)))
             title = f"Seq({target})[up to {count} in a row]"
 
-            ScenariosDataRow(self.parent, title, matching_scenarios).pack(side=tk.TOP, anchor=tk.W, fill=tk.X)
+            ScenariosDataRow(self.parent, title, matching_scenarios).pack(side=tk.TOP, anchor=tk.W, fill=tk.X,
+                                                                          expand=True)
 
         occurrence_filter_frame.apply_button["command"] = _apply_filter
 
-    def _create_filters(self):
-        filter_frame = tk.LabelFrame(self, text=" Filters: ")
-        filter_frame.pack(side=tk.LEFT, anchor=tk.N, padx=10, pady=5)
-        self._create_range_filter(filter_frame)
-        self._create_occurrence_filter(filter_frame)
-
-        for child in filter_frame.winfo_children():
-            child.grid_configure(padx=4, pady=2, sticky=tk.W)
-
-    def create_widgets(self):
-        self._create_filters()
-        self._create_actions_frame()
-
     def _export_scenarios(self, file_ext):
-        ext = f".{file_ext}"
-        target_file = file_dialog.asksaveasfilename(filetypes=(f"Text {ext}",))
-        if not target_file.lower().endswith(ext):
-            target_file = target_file + ext
+        target_file = file_dialog.asksaveasfilename(filetypes=(f"Text .{file_ext}",))
+
+        if not target_file:
+            message_box.showinfo("", "Export canceled")
+            return
+
+        if not target_file.lower().endswith(file_ext):
+            target_file = f"{target_file}.{file_ext}"
 
         if message_box.askyesno("Confirm export", f"Target file:\n{target_file}"):
             self.scenarios.write_to_file(target_file)
