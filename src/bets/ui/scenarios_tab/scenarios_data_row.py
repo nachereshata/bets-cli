@@ -40,49 +40,26 @@ class ScenariosDataRow(ttk.LabelFrame):
         ttk.Button(view_frame, text="View", command=self.view_as_grid).grid(column=0, row=0, padx=10, pady=5)
         ttk.Button(view_frame, text="Delete", command=self.destroy).grid(column=0, row=1, padx=10, pady=5)
 
-    def _create_outcome_counts_filter(self, filter_frame):
-        outcomes_filter_frame = FromToFilterFrame(filter_frame,
-                                                  text=" Outcomes counts ",
-                                                  combo_values=("1", "X", "2"),
-                                                  max_value=len(self.scenarios.matches))
-        outcomes_filter_frame.grid(column=0, row=0)
+    def _create_range_filter(self, filter_frame):
+        outcomes = ("1", "X", "2")
+        ranks = ("min", "med", "max")
+        range_filter_frame = FromToFilterFrame(filter_frame,
+                                               text=" Range filter ",
+                                               combo_values=ranks + outcomes,
+                                               max_value=len(self.scenarios.matches))
+        range_filter_frame.grid(column=0, row=0)
 
         def _apply_filter():
-            outcome = outcomes_filter_frame.combo_box.get()
-            count_from = int(outcomes_filter_frame.spin_from.get())
-            count_to = int(outcomes_filter_frame.spin_to.get())
-            filter_func = outcomes_counts_filter(outcome, count_from, count_to)
+            target = range_filter_frame.combo_box.get()
+            count_from = int(range_filter_frame.spin_from.get())
+            count_to = int(range_filter_frame.spin_to.get())
+            create_filter_func = outcomes_counts_filter if (target in outcomes) else ranks_counts_filter
+            filter_func = create_filter_func(target, count_from, count_to)
             matching_scenarios = Scenarios(self.scenarios.matches, list(filter(filter_func, self.scenarios.scenarios)))
-            title = f"Count({outcome})[{count_from} - {count_to}]"
+            title = f"Range({target})[{count_from} - {count_to}]"
             ScenariosDataRow(self.parent, title, matching_scenarios).pack(side=tk.TOP, anchor=tk.W, fill=tk.X)
 
-        outcomes_filter_frame.apply_button["command"] = _apply_filter
-
-    def _create_ranks_counts_filter(self, filter_frame):
-        # outcomes filter
-        tk.Label(filter_frame, text="Ranks:").grid(column=0, row=1)
-        ranks_combo = ttk.Combobox(filter_frame, width=5, values=("min", "med", "max"), state="readonly")
-        ranks_combo.current(0)
-        ranks_combo.grid(column=1, row=1)
-        tk.Label(filter_frame, text="From: ").grid(column=2, row=1)
-        spin_ranks_from = tk.Spinbox(filter_frame, width=5, from_=0, to=len(self.scenarios.matches), state="readonly")
-        spin_ranks_from.grid(column=3, row=1)
-
-        tk.Label(filter_frame, text="To: ").grid(column=4, row=1)
-
-        spin_ranks_to = tk.Spinbox(filter_frame, from_=0, width=5, to=len(self.scenarios.matches), state="readonly")
-        spin_ranks_to.grid(column=5, row=1)
-
-        def _apply_ranks_counts_filter():
-            rank = ranks_combo.get()
-            count_from = int(spin_ranks_from.get())
-            count_to = int(spin_ranks_to.get())
-            filter_func = ranks_counts_filter(rank, count_from, count_to)
-            matching_scenarios = Scenarios(self.scenarios.matches, list(filter(filter_func, self.scenarios.scenarios)))
-            title = f"Count({rank})[{count_from} - {count_to}]"
-            ScenariosDataRow(self.parent, title, matching_scenarios).pack(side=tk.TOP, anchor=tk.W, fill=tk.X)
-
-        tk.Button(filter_frame, text="Add", command=_apply_ranks_counts_filter).grid(column=6, row=1)
+        range_filter_frame.apply_button["command"] = _apply_filter
 
     def _create_sequential_outcomes_filter(self, filter_frame):
         tk.Label(filter_frame, text="Outcomes: ").grid(column=0, row=2)
@@ -127,10 +104,9 @@ class ScenariosDataRow(ttk.LabelFrame):
         tk.Button(filter_frame, text="Add", command=_apply_seq_ranks_filter).grid(column=6, row=3)
 
     def _create_filters(self):
-        filter_frame = ttk.LabelFrame(self, text=" Filters: ")
+        filter_frame = tk.LabelFrame(self, text=" Filters: ")
         filter_frame.pack(side=tk.LEFT, anchor=tk.N, padx=10, pady=5)
-        self._create_outcome_counts_filter(filter_frame)
-        self._create_ranks_counts_filter(filter_frame)
+        self._create_range_filter(filter_frame)
         self._create_sequential_outcomes_filter(filter_frame)
         self._create_sequential_ranks_filter(filter_frame)
         for child in filter_frame.winfo_children():
