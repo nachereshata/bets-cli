@@ -7,6 +7,7 @@ import tkinter.ttk as ttk
 from more_itertools import circular_shifts
 
 from bets.model.scenarios import Scenario, Scenarios
+from bets.ui.scenarios_tab.filter_frames import FromToFilterFrame
 from bets.ui.table_frame import TableFrame
 from bets.utils import log
 
@@ -40,31 +41,22 @@ class ScenariosDataRow(ttk.LabelFrame):
         ttk.Button(view_frame, text="Delete", command=self.destroy).grid(column=0, row=1, padx=10, pady=5)
 
     def _create_outcome_counts_filter(self, filter_frame):
-        # outcomes filter
-        tk.Label(filter_frame, text="Outcomes:").grid(column=0, row=0)
-        outcomes_combo = ttk.Combobox(filter_frame, width=5, values=("1", "X", "2"), state="readonly")
-        outcomes_combo.current(0)
-        outcomes_combo.grid(column=1, row=0)
-        tk.Label(filter_frame, text="From: ").grid(column=2, row=0)
-        spin_outcomes_from = tk.Spinbox(filter_frame, width=5, from_=0, to=len(self.scenarios.matches),
-                                        state="readonly")
-        spin_outcomes_from.grid(column=3, row=0)
+        outcomes_filter_frame = FromToFilterFrame(filter_frame,
+                                                  text=" Outcomes counts ",
+                                                  combo_values=("1", "X", "2"),
+                                                  max_value=len(self.scenarios.matches))
+        outcomes_filter_frame.grid(column=0, row=0)
 
-        tk.Label(filter_frame, text="To: ").grid(column=4, row=0)
-
-        spin_outcomes_to = tk.Spinbox(filter_frame, width=5, from_=0, to=len(self.scenarios.matches), state="readonly")
-        spin_outcomes_to.grid(column=5, row=0)
-
-        def _apply_outcomes_counts_filter():
-            outcome = outcomes_combo.get()
-            count_from = int(spin_outcomes_from.get())
-            count_to = int(spin_outcomes_to.get())
+        def _apply_filter():
+            outcome = outcomes_filter_frame.combo_box.get()
+            count_from = int(outcomes_filter_frame.spin_from.get())
+            count_to = int(outcomes_filter_frame.spin_to.get())
             filter_func = outcomes_counts_filter(outcome, count_from, count_to)
             matching_scenarios = Scenarios(self.scenarios.matches, list(filter(filter_func, self.scenarios.scenarios)))
             title = f"Count({outcome})[{count_from} - {count_to}]"
             ScenariosDataRow(self.parent, title, matching_scenarios).pack(side=tk.TOP, anchor=tk.W, fill=tk.X)
 
-        tk.Button(filter_frame, text="Add", command=_apply_outcomes_counts_filter).grid(column=6, row=0)
+        outcomes_filter_frame.apply_button["command"] = _apply_filter
 
     def _create_ranks_counts_filter(self, filter_frame):
         # outcomes filter
@@ -134,8 +126,8 @@ class ScenariosDataRow(ttk.LabelFrame):
 
         tk.Button(filter_frame, text="Add", command=_apply_seq_ranks_filter).grid(column=6, row=3)
 
-    def _create_counts_filters(self):
-        filter_frame = ttk.LabelFrame(self, text="Counts Filters: ")
+    def _create_filters(self):
+        filter_frame = ttk.LabelFrame(self, text=" Filters: ")
         filter_frame.pack(side=tk.LEFT, anchor=tk.N, padx=10, pady=5)
         self._create_outcome_counts_filter(filter_frame)
         self._create_ranks_counts_filter(filter_frame)
@@ -145,7 +137,7 @@ class ScenariosDataRow(ttk.LabelFrame):
             child.grid_configure(padx=4, pady=2, sticky=tk.W)
 
     def create_widgets(self):
-        self._create_counts_filters()
+        self._create_filters()
         self._create_actions_frame()
 
     def _export_scenarios(self, file_ext):
