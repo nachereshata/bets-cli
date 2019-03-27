@@ -3,7 +3,7 @@ from tkinter.ttk import Button, Entry, Label, LabelFrame
 from typing import Tuple, Optional
 
 from bets.model.matches import Matches
-from bets.ui.constants import PAD_X, PAD_y, W_MATCH_RATIO, W_MATCH_TITLE
+from bets.ui.constants import PAD_X, PAD_Y, W_MATCH_RATIO, W_MATCH_TITLE
 from bets.utils import log
 
 
@@ -20,7 +20,7 @@ class ManualMatchInputFrame(LabelFrame):
         self._var_ratio_1 = DoubleVar()
         self._var_ratio_x = DoubleVar()
         self._var_ratio_2 = DoubleVar()
-        self.grid(column=column, row=row, sticky=NSEW, padx=PAD_X, pady=PAD_y)
+        self.grid(column=column, row=row, sticky=NSEW, padx=PAD_X, pady=PAD_Y)
         self.create_widgets()
 
     def create_widgets(self):
@@ -47,7 +47,7 @@ class ManualMatchInputFrame(LabelFrame):
         Button(self, text="Clear all", command=self._matches.clear).grid(column=2, row=3)
 
         for child in self.winfo_children():
-            child.grid_configure(padx=PAD_X, pady=PAD_y, sticky=EW)
+            child.grid_configure(padx=PAD_X, pady=PAD_Y, sticky=EW)
 
     def _clear_inputs(self):
         self._var_title.set("")
