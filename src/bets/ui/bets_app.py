@@ -20,8 +20,7 @@ class BetsApp:
 
         # create tabs container
         self.tabs = ttk.Notebook(self.win)
-        self.tabs.grid(column=0, row=0, padx=10, pady=5)
-        self.tabs.pack(expand=1, fill=tk.BOTH)
+        self.tabs.grid(column=0, row=0, padx=4, pady=2)
 
         # create tabs
         self.matches_tab = MatchesTab(self.win, self.tabs, self.matches)
