@@ -1,12 +1,12 @@
 from pathlib import Path
-from typing import Dict, Iterable, Tuple
 from random import randint
+from typing import Dict, Iterable, Tuple, Optional
 
 from tabulate import tabulate
 
-from bets.utils.string_utils import fmt_tuple, randstr, split_lines
-from bets.utils.decorators import cachedproperty
 from bets.utils import log
+from bets.utils.decorators import cachedproperty
+from bets.utils.string_utils import fmt_tuple, randstr, split_lines
 
 COLUMNS = ("1", "X", "2", "[1]", "[x]", "[2]", "min", "med", "max", "Title")
 OUTCOMES = ("1", "X", "2")
@@ -124,10 +124,54 @@ class Match:
         return cls(title, r1, rx, r2)
 
 
-class Matches:
+def _parse_efbet(text: str) -> "Matches":
+    lines = split_lines(text)
 
-    def __init__(self):
-        self._matches = []
+    def _get_title_index(start_line=0):
+        for i, line in enumerate(lines):
+            if i < start_line:
+                continue
+            if "vs" in line:
+                return i
+        raise ValueError("lines don't contain efbet match title (no 'vs')!")
+
+    title_index = _get_title_index()
+    ratio_1_index = title_index + 1
+    ratio_x_index = ratio_1_index + 1
+    ratio_2_index = ratio_x_index + 1
+    second_title_index = _get_title_index(ratio_2_index)
+    record_size = second_title_index - title_index
+
+    titles = lines[title_index::record_size]
+    ratios_1 = lines[ratio_1_index::record_size]
+    ratios_x = lines[ratio_x_index::record_size]
+    ratios_2 = lines[ratio_2_index::record_size]
+
+    return Matches(Match(title, r1, rx, r2) for title, r1, rx, r2 in zip(titles, ratios_1, ratios_x, ratios_2))
+
+
+def _parse_lines(text: str) -> "Matches":
+    lines = split_lines(text)
+
+    def parse_line(line: str) -> Match:
+        line_parts = line.strip().split(" ")
+        if len(line_parts) < 4:
+            raise ValueError("Line should contain at least 4 space-separated parts! 'title r1 rx r2'")
+        title = " ".join(line_parts[:-3])
+        r1, rx, r2 = line_parts[-3:]
+        return Match(title, (r1, rx, r2))
+
+    return Matches(parse_line(line) for line in lines)
+
+
+class Matches:
+    PARSERS = {
+        "efbet": _parse_efbet,
+        "lines": _parse_lines
+    }
+
+    def __init__(self, matches: Iterable[Match] = None):
+        self._matches = list(matches) if bool(matches) else []
 
     def __eq__(self, other):
         if isinstance(other, Matches):
@@ -149,7 +193,7 @@ class Matches:
     def __iter__(self):
         return self._matches.__iter__()
 
-    def __getitem__(self, item) -> Match:
+    def __getitem__(self, item) -> Optional[Match]:
         if isinstance(item, int):
             return self._matches[item]
 
@@ -203,50 +247,6 @@ class Matches:
         )
 
     @classmethod
-    def from_text_efbet(cls, text: str) -> "Matches":
-        lines = split_lines(text)
-
-        def _get_title_index(start_line=0):
-            for i, line in enumerate(lines):
-                if i < start_line:
-                    continue
-                if "vs" in line:
-                    return i
-            raise ValueError("lines don't contain efbet match title (no 'vs')!")
-
-        title_index = _get_title_index()
-        ratio_1_index = title_index + 1
-        ratio_x_index = ratio_1_index + 1
-        ratio_2_index = ratio_x_index + 1
-        second_title_index = _get_title_index(ratio_2_index)
-        record_size = second_title_index - title_index
-
-        titles = lines[title_index::record_size]
-        ratios1 = lines[ratio_1_index::record_size]
-        ratiosx = lines[ratio_x_index::record_size]
-        ratios2 = lines[ratio_2_index::record_size]
-
-        matches = cls()
-        matches.extend(Match(title, r1, rx, r2) for title, r1, rx, r2 in zip(titles, ratios1, ratiosx, ratios2))
-        return matches
-
-    @classmethod
-    def from_text_lines(cls, text: str) -> "Matches":
-        lines = split_lines(text)
-
-        def parse_line(line: str) -> Match:
-            line_parts = line.strip().split(" ")
-            if len(line_parts) < 4:
-                raise ValueError("Line should contain at least 4 space-separated parts! 'title r1 rx r2'")
-            title = " ".join(line_parts[:-3])
-            r1, rx, r2 = line_parts[-3:]
-            return Match(title, (r1, rx, r2))
-
-        matches = cls()
-        matches.extend(parse_line(line) for line in lines)
-        return matches
-
-    @classmethod
     def random(cls, size=5):
         instance = cls()
         instance.extend(Match.random() for _ in range(size))
@@ -259,17 +259,9 @@ class Matches:
         Path(file).write_text(self.table, encoding="utf-8")
 
     def write_to_file(self, file: str):
-        suffix = file[file.rfind(".") + 1:].lower()
-        write_func = self.write_to_csv if suffix == "csv" else self.write_to_txt
+        file_ext = file[file.rfind(".") + 1:].lower()
+        write_func = self.write_to_csv if file_ext == "csv" else self.write_to_txt
         write_func(file)
 
     def clear(self):
         self._matches.clear()
-
-    @classmethod
-    def get_parser(cls, fmt):
-        parsers = {
-            "efbet": cls.from_text_efbet,
-            "lines": cls.from_text_lines
-        }
-        return parsers[fmt]
