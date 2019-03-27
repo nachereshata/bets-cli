@@ -1,49 +1,69 @@
-import tkinter as tk
-import tkinter.messagebox as mBox
-import tkinter.scrolledtext as scrolledtext
-import tkinter.ttk as ttk
+from tkinter import END
+from tkinter import messagebox
+from tkinter.scrolledtext import ScrolledText
+from tkinter.ttk import Button, Combobox, Label, LabelFrame
+from typing import Optional
 
 from bets.model.matches import Matches
 from bets.ui.matches_tab import constants
 from bets.utils import log
 
 
-class PastedMatchesInput(ttk.LabelFrame):
+class PastedMatchesInput(LabelFrame):
+    paste_input: ScrolledText
+    paste_fmt_combo: Combobox
+
     def __init__(self, parent, matches: Matches, column=0, row=1):
         super().__init__(parent, text=" Pasted input ")
         self.parent = parent
         self.matches = matches
-        self.grid(column=column, row=row, rowspan=4, sticky="WNE", padx=10, pady=5)
+        self.grid(column=column, row=row, sticky="WNES", padx=4, pady=2)
         self.create_widgets()
 
     def create_widgets(self):
+        self.paste_input = ScrolledText(self, width=2 * constants.W_MATCH_TITLE, height=4)
+        self.paste_input.grid(column=0, row=0, rowspan=4)
 
-        pasted_scroll = scrolledtext.ScrolledText(self, width=2 * constants.W_MATCH_TITLE, height=6)
-        pasted_scroll.grid(column=0, row=0, rowspan=4, sticky="WNE", padx=10, pady=5)
+        Label(self, text="Paste format:").grid(column=1, row=0)
+        self.paste_fmt_combo = Combobox(self, values=("efbet", "lines"), state="readonly")
+        self.paste_fmt_combo.grid(column=1, row=1)
+        self.paste_fmt_combo.current(0)
 
-        ttk.Label(self, text="Paste format:").grid(column=1, row=0, sticky="WE")
-        paste_fmt_combo = ttk.Combobox(self, values=("efbet", "lines"), state="readonly")
-        paste_fmt_combo.grid(column=1, row=1, sticky="WE", padx=4, pady=2)
-        paste_fmt_combo.current(0)
+        Button(self, text="Add", command=self._add_pasted_matches).grid(column=1, row=2)
+        Button(self, text="Clear", command=self._clear_paste_input).grid(column=1, row=3)
 
-        def _clear_paste_input():
-            log.debug("clearing paste input...")
-            pasted_scroll.delete("1.0", tk.END)
+        for child in self.winfo_children():
+            child.grid_configure(padx=4, pady=2, sticky="WNES")
 
-        def _add_pasted_matches():
-            paste_fmt = paste_fmt_combo.get()
-            log.debug(f"got paste fmt: {paste_fmt}")
-            pasted_text = pasted_scroll.get("1.0", tk.END).strip()
-            log.debug(f"got pasted text: [{pasted_text}]")
-            log.debug("parsing matches...")
-            try:
-                parser = Matches.get_parser(paste_fmt)
-                matches_to_add = parser(pasted_text)
-                log.debug(f" got [{len(matches_to_add)}] new matches!")
-                self.matches.extend(matches_to_add)
-                _clear_paste_input()
-            except Exception:
-                mBox.showerror("Invalid input", "Check the selected paste format and try again!")
+    def _clear_paste_input(self):
+        log.debug("clearing paste input...")
+        self.paste_input.delete("1.0", END)
 
-        ttk.Button(self, text="Add", command=_add_pasted_matches).grid(column=1, row=2, sticky="WE", padx=4, pady=2)
-        ttk.Button(self, text="Clear", command=_clear_paste_input).grid(column=1, row=3, sticky="WE", padx=4, pady=2)
+    def _get_pasted_text(self) -> str:
+        pasted_text = self.paste_input.get("1.0", END).strip()
+        log.debug(f"got paste text:\n{pasted_text}")
+        return pasted_text
+
+    def _get_pasted_text_fmt(self) -> str:
+        paste_fmt = self.paste_fmt_combo.get()
+        log.debug(f"got paste fmt:{paste_fmt}")
+        return paste_fmt
+
+    def _get_pasted_matches(self) -> Optional[Matches]:
+        log.debug("parsing pasted matches...")
+
+        try:
+            matches = Matches.PARSERS[self._get_pasted_text_fmt()](self._get_pasted_text())
+            if matches:
+                log.debug(f" got [{len(matches)}] new matches!\n{matches.table}")
+                return matches
+        except Exception:
+            messagebox.showerror("Invalid input", "Check the pasted text and the chosen format!")
+
+        return None
+
+    def _add_pasted_matches(self):
+        matches = self._get_pasted_matches()
+        if matches:
+            self.matches.extend(matches)
+            self._clear_paste_input()
