@@ -16,7 +16,4 @@ class MatchesTableFrame(LabelFrame, MatchesObserver):
         matches.add_observer(self)
 
     def matches_changed(self, matches_observable: MatchesObservable):
-        if matches_observable:
-            self.var_table.set(matches_observable.table)
-        else:
-            self.var_table.set("")
+        self.var_table.set(matches_observable.table if matches_observable else "")
