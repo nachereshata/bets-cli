@@ -1,8 +1,11 @@
 from tkinter import BOTH, LEFT, RIGHT, W, X, SE
 from tkinter import LabelFrame
-from tkinter import filedialog, messagebox, ttk
+from tkinter import filedialog, messagebox
+from tkinter.ttk import Button
+from tkinter.ttk import LabelFrame as TtkLabelFrame
 
 from bets.model.scenarios import Scenarios
+from bets.ui.constants import PAD_X, PAD_Y
 from bets.ui.scenarios_tab.filter_frames import TotalOccurrencesFilterFrame, SequentialOccurrencesFilterFrame
 from bets.utils import log
 from bets.utils.sys_utils import open_file
@@ -20,7 +23,7 @@ def _get_from_to_values(text: str, max_value: int):
     return values
 
 
-class ScenariosDataRow(ttk.LabelFrame):
+class ScenariosDataRow(TtkLabelFrame):
 
     def __init__(self, parent, title, scenarios: Scenarios):
         self.title = f"{title} Scenarios ({len(scenarios)}) "
@@ -40,16 +43,17 @@ class ScenariosDataRow(ttk.LabelFrame):
         self._create_occurrence_filter(filter_frame)
 
         for child in filter_frame.winfo_children():
-            child.grid_configure(padx=4, pady=2, sticky=W)
+            child.grid_configure(padx=PAD_X, pady=PAD_Y, sticky=W)
 
     def _create_actions(self):
         actions_frame = LabelFrame(self)
         actions_frame.pack(side=RIGHT, anchor=W, fill=BOTH)
         save_frame = LabelFrame(actions_frame, text=" Save as ")
-        save_frame.grid(column=0, row=0, padx=4, pady=2)
-        ttk.Button(save_frame, text="CSV", command=self.export_as_csv).grid(column=0, row=0, padx=2, pady=2)
-        ttk.Button(save_frame, text="TXT", command=self.export_as_grid).grid(column=1, row=0, padx=2, pady=2)
-        ttk.Button(actions_frame, text="Delete", command=self.destroy).grid(column=2, row=0, sticky=SE, padx=4, pady=2)
+        save_frame.grid(column=0, row=0, padx=PAD_X, pady=PAD_Y)
+        Button(save_frame, text="CSV", command=self.export_as_csv).grid(column=0, row=0, padx=PAD_X // 2, pady=PAD_Y)
+        Button(save_frame, text="TXT", command=self.export_as_grid).grid(column=1, row=0, padx=PAD_X // 2, pady=PAD_Y)
+        Button(actions_frame,
+               text="Delete", command=self.destroy).grid(column=2, row=0, padx=PAD_X, pady=PAD_Y, sticky=SE)
 
     def _create_range_filter(self, filter_frame):
         range_filter_frame = TotalOccurrencesFilterFrame(filter_frame, max_value=len(self.scenarios.matches))
