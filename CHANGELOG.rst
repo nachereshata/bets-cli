@@ -37,3 +37,8 @@ Version 3.0.1
 =============
 
 - Improved scenarios filters
+
+Version 3.1.0
+=============
+
+- Improved UI

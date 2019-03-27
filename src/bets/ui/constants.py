@@ -1,2 +1,4 @@
 W_MATCH_TITLE = 30
 W_MATCH_RATIO = 11
+PAD_X = 4
+PAD_y = 2

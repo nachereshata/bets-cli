@@ -5,7 +5,7 @@ from tkinter.ttk import Button, Combobox, Label, LabelFrame
 from typing import Optional
 
 from bets.model.matches import Matches
-from bets.ui.matches_tab import constants
+from bets.ui import constants
 from bets.utils import log
 
 
