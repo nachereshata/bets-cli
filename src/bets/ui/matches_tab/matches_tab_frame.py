@@ -1,11 +1,11 @@
-import tkinter as tk
+from tkinter import Frame
 
 from bets.ui.matches_tab.manual_match_input_frame import ManualMatchInputFrame
 from bets.ui.matches_tab.matches_table_frame import MatchesTableFrame
 from bets.ui.matches_tab.pasted_matches_input import PastedMatchesInput
 
 
-class MatchesTab(tk.Frame):
+class MatchesTabFrame(Frame):
     matches_table: MatchesTableFrame
     single_match_input: ManualMatchInputFrame
     pasted_matches_input: PastedMatchesInput
