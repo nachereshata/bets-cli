@@ -4,7 +4,7 @@ from tkinter.ttk import Notebook
 from bets.ui.matches_observable import MatchesObservable
 from bets.ui.matches_tab.matches_tab_frame import MatchesTabFrame
 from bets.ui.menu_bar import MenuBar
-from bets.ui.scenarios_tab.scenarios_tab import ScenariosTab
+from bets.ui.scenarios_tab.scenarios_tab_frame import ScenariosTabFrame
 from bets.utils import log
 
 
@@ -24,7 +24,7 @@ class BetsApp:
 
         # create tabs
         self.matches_tab = MatchesTabFrame(self.win, self.tabs, self.matches)
-        self.scenarios_tab = ScenariosTab(self.win, self.tabs, self.matches)
+        self.scenarios_tab = ScenariosTabFrame(self.win, self.tabs, self.matches)
 
         # create menus
         self.menu_bar = MenuBar(self.win, self.matches)
