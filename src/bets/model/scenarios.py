@@ -1,12 +1,15 @@
-from pathlib import Path
-from typing import List
 from itertools import product
+from pathlib import Path
+from re import findall
+from typing import List
+
+from more_itertools import circular_shifts
 from tabulate import tabulate
 
+from bets.model.matches import Matches, RANKS, OUTCOMES
 from bets.utils import log
 from bets.utils.decorators import cachedproperty
 from bets.utils.string_utils import fmt_tuple
-from bets.model.matches import Matches, RANKS, OUTCOMES
 
 
 class Scenario:
@@ -132,6 +135,38 @@ class Scenarios:
             numalign="decimal",
             showindex=True
         )
+
+    def filter(self, filter_func):
+        return Scenarios(self.matches, list(filter(filter_func, self.scenarios)))
+
+    def filter_by_total_occurrences(self, value, min_count, max_count):
+        def is_matching_counts(scenario: Scenario):
+            count = 0
+            values = scenario.ranks if (value in RANKS) else scenario.outcomes
+            for v in values:
+                if value in v:
+                    count = count + 1
+            return min_count <= count <= max_count
+
+        return self.filter(is_matching_counts)
+
+    def filter_by_sequential_occurrences(self, value, max_count):
+        def is_matching_count(scenario: Scenario):
+            values = scenario.outcomes if (value in OUTCOMES) else scenario.ranks
+            for shift in circular_shifts(values):
+                if value in OUTCOMES:
+                    matching_parts = findall(f"[{value}]+", "".join(shift))
+                else:
+                    matching_parts = findall(f"/?((?:{value})+)", "".join(shift))
+
+                if matching_parts:
+                    for part in matching_parts:
+                        actual_count = len(part) if (value in OUTCOMES) else (len(part) // 3)
+                        if actual_count > max_count:
+                            return False
+            return True
+
+        return self.filter(is_matching_count)
 
     def write_to_csv(self, file):
         Path(file).write_text(self.csv, encoding="utf-8")
