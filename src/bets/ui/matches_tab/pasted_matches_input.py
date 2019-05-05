@@ -54,8 +54,9 @@ class PastedMatchesInput(LabelFrame):
             if matches:
                 log.debug(f" got [{len(matches)}] new matches!\n{matches.table}")
                 return matches
-        except Exception:
-            messagebox.showerror("Invalid input", "Check the pasted text and the chosen format!")
+        except Exception as ex:
+            log.exception("Error while parsing pasted matches!")
+            messagebox.showerror("Error while parsing pasted text!", f" Exception: {str(ex)}, args:{ex.args}")
 
         return None
 
