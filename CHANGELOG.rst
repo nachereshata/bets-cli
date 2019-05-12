@@ -42,3 +42,8 @@ Version 3.1.0
 =============
 
 - Improved UI
+
+Version 3.1.1
+=============
+
+- Fixed error when parsing matches from lines
