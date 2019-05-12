@@ -6,7 +6,7 @@ from typing import Iterable, Union
 _log = logging.getLogger(__name__)
 
 
-def parse_float(value) -> float:
+def parse_float(value: Union[int, float, str]) -> float:
     _log.debug("parsing [{}] to float...".format(value))
     try:
         return float(value)
@@ -33,7 +33,7 @@ def generate_variations(items, length: int):
         yield variation
 
 
-def multiply_all(items: Iterable[Union[int, float]]):
+def multiply_all(items: Iterable[Union[int, float]]) -> float:
     result = 1
     for i in items:
         result = result * i
