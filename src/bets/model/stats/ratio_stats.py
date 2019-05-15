@@ -3,7 +3,8 @@ from bets.model.stats.abstract_stats import AbstractStats
 
 
 class RatioStats(AbstractStats):
-    KEYS = ["ratio_1", "ratio_X", "ratio_2",
+    KEYS = ["date", "country", "tournament", "host_team", "guest_team",
+            "ratio_1", "ratio_X", "ratio_2",
             "rank_1", "rank_X", "rank_2",
             "ratio_min", "ratio_med", "ratio_max",
             "outcome_min", "outcome_med", "outcome_max",
@@ -11,7 +12,14 @@ class RatioStats(AbstractStats):
             "ratio_perc_min_med", "ratio_perc_med_max", "ratio_perc_min_max",
             "ratio_mean", "ratio_geometric_mean", "ratio_perc_mean_geometric_mean"]
 
-    def __init__(self, ratio_1, ratio_X, ratio_2):
+    def __init__(self, ratio_1, ratio_X, ratio_2, host_team="", guest_team="", date="", country="", tournament=""):
+
+        self.host_team = host_team
+        self.guest_team = guest_team
+        self.date = date
+        self.country = country
+        self.tournament = tournament
+
         self.ratio_1 = float(ratio_1)
         self.ratio_X = float(ratio_X)
         self.ratio_2 = float(ratio_2)
@@ -51,3 +59,27 @@ class RatioStats(AbstractStats):
         self.ratio_mean = (self.ratio_1 + self.ratio_X + self.ratio_2) / 3
         self.ratio_geometric_mean = (self.ratio_1 * self.ratio_X * self.ratio_2) ** (1 / 3)
         self.ratio_perc_mean_geometric_mean = (self.ratio_mean / self.ratio_geometric_mean) * 100
+
+    def is_having_similar_ratios_to(self, other: "RatioStats", delta=0.05) -> bool:
+        if isinstance(other, RatioStats):
+            if abs(self.ratio_1 - other.ratio_1) <= delta:
+                if abs(self.ratio_X - other.ratio_X) <= delta:
+                    if abs(self.ratio_2 - other.ratio_2) <= delta:
+                        return True
+        return False
+
+    def is_having_similar_outcome_ratio_percentages_to(self, other: "RatioStats", delta=0.05) -> bool:
+        if isinstance(other, RatioStats):
+            if abs(self.ratio_perc_1_X - other.ratio_perc_1_X):
+                if abs(self.ratio_perc_X_2 - other.ratio_perc_X_2) <= delta:
+                    if abs(self.ratio_perc_1_2 - other.ratio_perc_1_2) <= delta:
+                        return True
+        return False
+
+    def is_having_similar_rank_ratio_percentages_to(self, other: "RatioStats", delta=0.05) -> bool:
+        if isinstance(other, RatioStats):
+            if abs(self.ratio_perc_min_med - other.ratio_perc_min_med) <= delta:
+                if abs(self.ratio_perc_med_max - other.ratio_perc_med_max) <= delta:
+                    if abs(self.ratio_perc_min_max - other.ratio_perc_min_max) <= delta:
+                        return True
+        return False

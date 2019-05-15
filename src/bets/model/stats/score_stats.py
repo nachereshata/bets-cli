@@ -8,11 +8,12 @@ class ScoreStats(OutcomeStats):
     guest_score: int
     goals_diff: int
 
-    def __init__(self, ratio_1, ratio_X, ratio_2, host_score, guest_score):
+    def __init__(self, ratio_1, ratio_X, ratio_2, host_score, guest_score,
+                 host_team="", guest_team="", date="", country="", tournament=""):
         host_score = int(host_score)
         guest_score = int(guest_score)
         outcome = ("1" if (host_score > guest_score) else ("2" if guest_score > host_score else "X"))
-        super().__init__(ratio_1, ratio_X, ratio_2, outcome)
+        super().__init__(ratio_1, ratio_X, ratio_2, outcome, host_team, guest_team, date, country, tournament)
 
         self.host_score = host_score
         self.guest_score = guest_score
