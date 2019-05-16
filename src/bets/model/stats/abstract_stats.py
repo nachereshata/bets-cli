@@ -10,6 +10,8 @@ class AbstractStats:
         try:
             return self.__dict__[key]
         except KeyError:
+            if hasattr(self, key):
+                return getattr(self, key)
             raise
 
     def __repr__(self):
