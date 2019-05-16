@@ -20,9 +20,9 @@ class RatioStats(AbstractStats):
         self.country = country
         self.tournament = tournament
 
-        self.ratio_1 = float(ratio_1)
-        self.ratio_X = float(ratio_X)
-        self.ratio_2 = float(ratio_2)
+        self.ratio_1 = round(float(ratio_1), 2)
+        self.ratio_X = round(float(ratio_X), 2)
+        self.ratio_2 = round(float(ratio_2), 2)
 
         self.ratios = (self.ratio_1, self.ratio_X, self.ratio_2)
         self.ratios_sorted = tuple(sorted(self.ratios))
@@ -48,17 +48,17 @@ class RatioStats(AbstractStats):
         self.outcome_med = "/".join(outcomes_by_rank["med"])
         self.outcome_max = "/".join(outcomes_by_rank["max"])
 
-        self.ratio_perc_1_X = (self.ratio_1 / self.ratio_X) * 100
-        self.ratio_perc_X_2 = (self.ratio_X / self.ratio_2) * 100
-        self.ratio_perc_1_2 = (self.ratio_1 / self.ratio_2) * 100
+        self.ratio_perc_1_X = round(((self.ratio_1 / self.ratio_X) * 100), 2)
+        self.ratio_perc_X_2 = round(((self.ratio_X / self.ratio_2) * 100), 2)
+        self.ratio_perc_1_2 = round(((self.ratio_1 / self.ratio_2) * 100), 2)
 
-        self.ratio_perc_min_med = (self.ratio_min / self.ratio_med) * 100
-        self.ratio_perc_med_max = (self.ratio_med / self.ratio_max) * 100
-        self.ratio_perc_min_max = (self.ratio_min / self.ratio_max) * 100
+        self.ratio_perc_min_med = round(((self.ratio_min / self.ratio_med) * 100), 2)
+        self.ratio_perc_med_max = round(((self.ratio_med / self.ratio_max) * 100), 2)
+        self.ratio_perc_min_max = round(((self.ratio_min / self.ratio_max) * 100), 2)
 
-        self.ratio_mean = (self.ratio_1 + self.ratio_X + self.ratio_2) / 3
-        self.ratio_geometric_mean = (self.ratio_1 * self.ratio_X * self.ratio_2) ** (1 / 3)
-        self.ratio_perc_mean_geometric_mean = (self.ratio_mean / self.ratio_geometric_mean) * 100
+        self.ratio_mean = round(((self.ratio_1 + self.ratio_X + self.ratio_2) / 3), 2)
+        self.ratio_geometric_mean = round(((self.ratio_1 * self.ratio_X * self.ratio_2) ** (1 / 3)), 2)
+        self.ratio_perc_mean_geometric_mean = round(((self.ratio_mean / self.ratio_geometric_mean) * 100), 2)
 
     def is_having_similar_ratios_to(self, other: "RatioStats", delta=0.05) -> bool:
         if isinstance(other, RatioStats):
