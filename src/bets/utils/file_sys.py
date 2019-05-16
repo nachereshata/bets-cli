@@ -10,7 +10,7 @@ from string import ascii_letters
 from bets.utils import log
 
 
-def get_temp_location(path: str):
+def get_temp_location(path: str) -> str:
     log.debug(f"getting temp location for: [{path}]")
 
     path = Path(path).absolute()
@@ -75,12 +75,28 @@ def copy_to_temp_location(path: str) -> str:
     return copy(str(src_path), str(dst_path), exists_ok=True)
 
 
-def open_file(file_path: str):  # pragma: no cover
+def open_file(file_path: str, safe=True):  # pragma: no cover
     """Makes a temp copy of a file and opens it with the system default handler"""
-    tmp_path = copy_to_temp_location(file_path)
-    process = Process(target=partial(call, ["cmd", "/c", tmp_path]), daemon=True)
+
+    if safe:
+        file_path = copy_to_temp_location(file_path)
+
+    process = Process(target=partial(call, ["cmd", "/c", file_path]), daemon=True)
     process.start()
-    process.join(timeout=20)
+    process.join(timeout=2)
+
+
+def write_text(text: str, file: str):
+    path = Path(file).absolute()
+    log.debug(f"writing text to: [{str(path)}] \n{text}")
+    with path.open("wb") as out:
+        out.write(text.encode("utf-8"))
+
+
+def view_text(text: str):
+    dst_file = get_temp_location("text_view.txt")
+    write_text(text, dst_file)
+    open_file(dst_file, False)
 
 
 def main():  # pragma: no cover
