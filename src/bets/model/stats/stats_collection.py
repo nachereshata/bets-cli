@@ -1,3 +1,5 @@
+import json
+from pathlib import Path
 from typing import List, Union, Iterable, Dict
 
 from bets.model.stats.abstract_stats import AbstractStats
@@ -13,7 +15,8 @@ class StatsCollection(AbstractStats):
             "n_min", "n_med", "n_max",
             "perc_min", "perc_med", "perc_max",
             "ratio_total", "ratio_mean", "ratio_geometric_mean",
-            "ratio_rel_total_mean", "ratio_rel_total_mean_geometric"]
+            "ratio_perc_total_mean", "ratio_perc_total_mean_geometric",
+            "outcomes", "ranks", "ratios"]
 
     def __init__(self, matches: Iterable[Union[OutcomeStats, ScoreStats]] = None):
         self._matches: List[Union[OutcomeStats, ScoreStats]] = list(matches) if matches else []
@@ -23,6 +26,31 @@ class StatsCollection(AbstractStats):
 
     def __len__(self):
         return len(self._matches)
+
+    @classmethod
+    def read_json(cls, file=None) -> "MatchesList":
+        if file is None:
+            file = r"D:\PROJECT_HOME\f_stats\src\f_stats\storage\matches.json"
+        path = Path(file)
+        matches = []
+        with path.open("rb") as fp:
+            matches_dicts = json.loads(fp.read().decode("utf-8"))
+            for m in matches_dicts:
+                matches.append(ScoreStats(m["ratio_1"],
+                                          m["ratio_x"],
+                                          m["ratio_2"],
+                                          m["host_score"],
+                                          m["guest_score"],
+                                          m["host_team"],
+                                          m["guest_team"],
+                                          m["date"],
+                                          m["country"],
+                                          m["tournament"]))
+        return StatsCollection(matches)
+
+    @property
+    def matches_dicts(self) -> List[Dict[str, Union[int, float, str]]]:
+        return [m.as_dict() for m in self]
 
     @property
     def size(self) -> int:
@@ -99,16 +127,28 @@ class StatsCollection(AbstractStats):
         return round(mean_geometric, 2)
 
     @property
-    def ratio_rel_total_mean(self) -> float:
-        return round((self.ratio_total / self.ratio_mean), 2)
+    def ratio_perc_total_mean(self) -> float:
+        return round(((self.ratio_total / self.ratio_mean) * 100), 2)
 
     @property
-    def ratio_rel_total_mean_geometric(self) -> float:
-        return round((self.ratio_total / self.ratio_geometric_mean), 2)
+    def ratio_perc_total_mean_geometric(self) -> float:
+        return round(((self.ratio_total / self.ratio_geometric_mean) * 100), 2)
 
     @property
     def dates(self) -> List[str]:
         return [m.date for m in self if m.date]
+
+    @property
+    def outcomes(self) -> str:
+        return " ".join([m.outcome for m in self])
+
+    @property
+    def ranks(self) -> str:
+        return " ".join([m.rank for m in self])
+
+    @property
+    def ratios(self) -> str:
+        return " ".join([f"{m.ratio:.02f}" for m in self])
 
     def append(self, stats: Union[OutcomeStats, ScoreStats]):
         if not isinstance(stats, (OutcomeStats, ScoreStats)):
@@ -125,14 +165,6 @@ class StatsCollection(AbstractStats):
     def with_tournament(self, tournament: str) -> "StatsCollection":
         return StatsCollection(m for m in self if m.tournament == tournament)
 
-    def by_date(self) -> Dict[str, "StatsCollection"]:
-        return {date: self.with_date(date) for date in self.dates}
-
-    def stats_by_date(self) -> List[Dict[str, Union[int, float, str]]]:
-        stats_by_date = [dict(date=date, **stats.as_dict()) for date, stats in self.by_date().items()]
-        stats_by_date.sort(key=(lambda s: s["size"]))
-        return stats_by_date
-
     def with_similar_ratios_to(self, sample: RatioStats) -> "StatsCollection":
         return StatsCollection(m for m in self if m.is_having_similar_ratios_to(sample))
 
@@ -141,3 +173,11 @@ class StatsCollection(AbstractStats):
 
     def with_similar_rank_ratio_percentages_to(self, sample: RatioStats) -> "StatsCollection":
         return StatsCollection(m for m in self if m.is_having_similar_rank_ratio_percentages_to(sample))
+
+    def stats_by_date(self) -> Dict[str, "StatsCollection"]:
+        return {date: self.with_date(date) for date in self.dates}
+
+    def summary_by_date(self) -> List[Dict[str, Union[int, float, str]]]:
+        stats_by_date = [dict(date=date, **stats.as_dict()) for date, stats in self.stats_by_date().items()]
+        stats_by_date.sort(key=(lambda s: s["size"]))
+        return stats_by_date
