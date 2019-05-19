@@ -19,7 +19,7 @@ def _get_from_to_values(text: str, max_value: int):
     except ValueError:
         values = 0, max_value
 
-    log.debug("gor from-to values:", str(values))
+    log.debug("got from-to values:", str(values))
     return values
 
 
