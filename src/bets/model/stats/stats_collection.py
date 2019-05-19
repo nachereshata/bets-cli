@@ -1,11 +1,14 @@
 import json
+
 from pathlib import Path
 from typing import List, Union, Iterable, Dict
+from itertools import chain
 
 from bets.model.stats.abstract_stats import AbstractStats
 from bets.model.stats.outcome_stats import OutcomeStats
 from bets.model.stats.ratio_stats import RatioStats
 from bets.model.stats.score_stats import ScoreStats
+from bets.utils.string_utils import csv_from_dicts
 
 
 class StatsCollection(AbstractStats):
@@ -27,8 +30,17 @@ class StatsCollection(AbstractStats):
     def __len__(self):
         return len(self._matches)
 
+    def __add__(self, other):
+        if isinstance(other, StatsCollection):
+            return StatsCollection(chain(self._matches, other._matches))
+
+        raise TypeError(type(other))
+
+    def __bool__(self):
+        return bool(self._matches)
+
     @classmethod
-    def read_json(cls, file=None) -> "MatchesList":
+    def read_json(cls, file=None) -> "StatsCollection":
         if file is None:
             file = r"D:\PROJECT_HOME\f_stats\src\f_stats\storage\matches.json"
         path = Path(file)
@@ -135,10 +147,6 @@ class StatsCollection(AbstractStats):
         return round(((self.ratio_total / self.ratio_geometric_mean) * 100), 2)
 
     @property
-    def dates(self) -> List[str]:
-        return [m.date for m in self if m.date]
-
-    @property
     def outcomes(self) -> str:
         return " ".join([m.outcome for m in self])
 
@@ -150,11 +158,48 @@ class StatsCollection(AbstractStats):
     def ratios(self) -> str:
         return " ".join([f"{m.ratio:.02f}" for m in self])
 
-    def append(self, stats: Union[OutcomeStats, ScoreStats]):
-        if not isinstance(stats, (OutcomeStats, ScoreStats)):
+    @property
+    def unique_countries(self) -> List[str]:
+        return list(sorted(set([m.country for m in self if m.country])))
+
+    @property
+    def unique_dates(self) -> List[str]:
+        return list(sorted(set(m.date for m in self if m.date)))
+
+    @property
+    def unique_ranks(self) -> List[str]:
+        return list(sorted(set(self.ranks.split(" "))))
+
+    @property
+    def unique_ratios(self) -> List[float]:
+        return [float(value) for value in sorted(set(self.ratios.split(" ")))]
+
+    def append(self, stats: Union[RatioStats, OutcomeStats, ScoreStats]):
+        if not isinstance(stats, (RatioStats, OutcomeStats, ScoreStats)):
             raise TypeError(type(stats))
 
         self._matches.append(stats)
+
+    def get_matches_dicts(self, skip_columns: List[str] = None) -> List[Dict[str, Union[int, float, str]]]:
+        result = [m.as_dict() for m in self]
+        if skip_columns:
+            for item in result:
+                for column in skip_columns:
+                    if column in item:
+                        del item[column]
+        return result
+
+    def sort_by_rank(self) -> "StatsCollection":
+        self._matches.sort(key=(lambda m: m["rank"]))
+        return self
+
+    def sort_by_ratio(self) -> "StatsCollection":
+        self._matches.sort(key=(lambda m: m["ratio"]))
+        return self
+
+    def sort_by_outcome(self) -> "StatsCollection":
+        self._matches.sort(key=(lambda m: m["outcome"]))
+        return self
 
     def with_country(self, country: str) -> "StatsCollection":
         return StatsCollection(m for m in self if m.country == country)
@@ -162,8 +207,17 @@ class StatsCollection(AbstractStats):
     def with_date(self, date: str) -> "StatsCollection":
         return StatsCollection(m for m in self if m.date == date)
 
+    def with_rank(self, rank: str) -> "StatsCollection":
+        return StatsCollection(m for m in self if m.rank == rank)
+
+    def with_ratio(self, ratio: float) -> "StatsCollection":
+        return StatsCollection(m for m in self if m.ratio == ratio)
+
     def with_tournament(self, tournament: str) -> "StatsCollection":
         return StatsCollection(m for m in self if m.tournament == tournament)
+
+    def with_tournament_contains(self, value: str) -> "StatsCollection":
+        return StatsCollection(m for m in self if value in m.tournament)
 
     def with_similar_ratios_to(self, sample: RatioStats) -> "StatsCollection":
         return StatsCollection(m for m in self if m.is_having_similar_ratios_to(sample))
@@ -174,10 +228,53 @@ class StatsCollection(AbstractStats):
     def with_similar_rank_ratio_percentages_to(self, sample: RatioStats) -> "StatsCollection":
         return StatsCollection(m for m in self if m.is_having_similar_rank_ratio_percentages_to(sample))
 
-    def stats_by_date(self) -> Dict[str, "StatsCollection"]:
-        return {date: self.with_date(date) for date in self.dates}
+    def by_country(self) -> Dict[str, "StatsCollection"]:
+        return {country: self.with_country(country) for country in self.unique_countries}
+
+    def by_date(self) -> Dict[str, "StatsCollection"]:
+        return {date: self.with_date(date) for date in self.unique_dates}
+
+    def by_rank(self) -> Dict[str, "StatsCollection"]:
+        return {rank: self.with_rank(rank).sort_by_outcome() for rank in self.unique_ranks}
+
+    def by_ratio(self) -> Dict[str, "StatsCollection"]:
+        return {ratio: self.with_ratio(ratio).sort_by_outcome() for ratio in self.unique_ratios}
+
+    def tournaments_by_countries(self) -> Dict[str, List[str]]:
+        return {country: list(sorted(set([m.country for m in stats if m.country])))
+                for country, stats
+                in self.by_country().items()}
 
     def summary_by_date(self) -> List[Dict[str, Union[int, float, str]]]:
-        stats_by_date = [dict(date=date, **stats.as_dict()) for date, stats in self.stats_by_date().items()]
+        stats_by_date = [dict(date=date, **stats.as_dict())
+                         for date, stats
+                         in self.by_date().items()]
         stats_by_date.sort(key=(lambda s: s["size"]))
         return stats_by_date
+
+    def summary_by_rank(self) -> List[Dict[str, Union[int, float, str]]]:
+        stats_by_rank = [dict(rank=rank, **stats.as_dict())
+                         for rank, stats
+                         in self.by_rank().items()]
+        stats_by_rank.sort(key=(lambda s: s["size"]))
+        return stats_by_rank
+
+    def summary_by_ratio(self) -> List[Dict[str, Union[int, float, str]]]:
+        stats_by_ratio = [dict(ratio=ratio, met="", **stats.as_dict())
+                          for ratio, stats
+                          in self.by_ratio().items()]
+
+        for item in stats_by_ratio:
+            ratio = item["ratio"]
+            ratio_occurrences = len([m for m in self if (ratio in m.ratios)])
+            size = item["size"]
+            item["met"] = f"{size}/{ratio_occurrences}"
+
+        stats_by_ratio.sort(key=(lambda s: (eval(s["met"]), s["size"])))
+
+        return stats_by_ratio
+
+    def to_csv(self, columns: List[str] = None) -> str:
+        columns = columns or self._matches[0].KEYS
+        dicts = [m.as_dict() for m in self]
+        return csv_from_dicts(dicts, columns)
