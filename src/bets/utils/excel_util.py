@@ -29,6 +29,8 @@ def write_sheets(sheets: Dict[str, List[Dict[str, Union[int, float, str]]]], fil
     output_workbook = Workbook()
 
     for sheet_name, sheet_records in sheets.items():
+        if isinstance(sheet_name, float):
+            sheet_name = f"{sheet_name:.02f}"
         sheet = output_workbook.add_sheet(sheet_name)
         sheet.show_headers = True
         columns = list(sheet_records[0].keys())
