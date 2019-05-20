@@ -47,3 +47,10 @@ Version 3.1.1
 =============
 
 - Fixed error when parsing matches from lines
+
+
+Version 4.0.0
+=============
+
+- Added Stats tab
+- Added bundled matches stats
