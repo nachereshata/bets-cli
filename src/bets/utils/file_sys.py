@@ -88,7 +88,7 @@ def open_file(file_path: str, safe=True):  # pragma: no cover
 
 def write_text(text: str, file: str):
     path = Path(file).absolute()
-    log.debug(f"writing text to: [{str(path)}] \n{text}")
+    log.debug(f"writing text to: [{str(path)}] ({len(text)} chars)")
     with path.open("wb") as out:
         out.write(text.encode("utf-8"))
 
