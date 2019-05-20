@@ -171,8 +171,20 @@ class StatsCollection(AbstractStats):
         return list(sorted(set(self.ranks.split(" "))))
 
     @property
+    def unique_tournaments(self) -> List[str]:
+        return list(sorted(set([m.tournament for m in self if m.tournament])))
+
+    @property
     def unique_ratios(self) -> List[float]:
         return [float(value) for value in sorted(set(self.ratios.split(" ")))]
+
+    def get_counters(self) -> Dict[str, int]:
+        return {
+            "Countries": len(self.unique_countries),
+            "Tournaments": len(self.unique_tournaments),
+            "Dates": len(self.unique_dates),
+            "Records": len(self),
+        }
 
     def append(self, stats: Union[RatioStats, OutcomeStats, ScoreStats]):
         if not isinstance(stats, (RatioStats, OutcomeStats, ScoreStats)):
