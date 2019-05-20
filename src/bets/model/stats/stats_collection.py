@@ -268,11 +268,12 @@ class StatsCollection(AbstractStats):
         stats_by_rank = [dict(rank=rank, **stats.as_dict())
                          for rank, stats
                          in self.by_rank().items()]
+
         stats_by_rank.sort(key=(lambda s: s["size"]))
         return stats_by_rank
 
     def summary_by_ratio(self) -> List[Dict[str, Union[int, float, str]]]:
-        stats_by_ratio = [dict(ratio=ratio, met="", **stats.as_dict())
+        stats_by_ratio = [dict(ratio=ratio, won="", **stats.as_dict())
                           for ratio, stats
                           in self.by_ratio().items()]
 
@@ -280,9 +281,9 @@ class StatsCollection(AbstractStats):
             ratio = item["ratio"]
             ratio_occurrences = len([m for m in self if (ratio in m.ratios)])
             size = item["size"]
-            item["met"] = f"{size}/{ratio_occurrences}"
+            item["won"] = f"{size}/{ratio_occurrences}"
 
-        stats_by_ratio.sort(key=(lambda s: (eval(s["met"]), s["size"])))
+        stats_by_ratio.sort(key=(lambda s: (eval(s["won"]), s["size"])))
 
         return stats_by_ratio
 
