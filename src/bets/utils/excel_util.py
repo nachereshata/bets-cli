@@ -2,9 +2,12 @@ from typing import List, Dict, Union
 from pathlib import Path
 
 from xlrd import open_workbook
-from xlwt import Workbook
+from xlwt import XFStyle, Workbook
 
 from bets.utils import log
+
+FLOAT_FMT = XFStyle()
+FLOAT_FMT.num_format_str = "##0.00"
 
 
 def write_sheets(sheets: Dict[str, List[Dict[str, Union[int, float, str]]]], file: str):
@@ -42,7 +45,11 @@ def write_sheets(sheets: Dict[str, List[Dict[str, Union[int, float, str]]]], fil
         # write the records
         for row_index, record in enumerate(sheet_records):
             for column_index, column_name in enumerate(columns):
-                sheet.write(row_index + 1, column_index, record[column_name])
+                value = record[column_name]
+                if isinstance(value, float):
+                    sheet.write(row_index + 1, column_index, value, FLOAT_FMT)
+                else:
+                    sheet.write(row_index + 1, column_index, value)
 
     output_workbook.save(dst_path)
     log.debug(f"done writing sheets data:\n{sheets}")
