@@ -1,14 +1,16 @@
 from tkinter import Frame, Label
-from tkinter import EW, W, E, RAISED as SUNKEN
-from tkinter.filedialog import askopenfilename
+from tkinter import EW, W, E, RAISED
+from tkinter.filedialog import askopenfilename, asksaveasfilename
 
 from tkinter.ttk import Button, Combobox, Entry, LabelFrame
 
 from pathlib import Path
+from typing import Dict
 
+from bets.model.stats import reports
 from bets.model.stats.stats_collection import StatsCollection
 from bets.ui.constants import PAD_X, PAD_Y
-from bets.utils import log
+from bets.utils import log, file_sys
 
 ALL = "All"
 
@@ -45,20 +47,20 @@ class LoadStatsFrame(LabelFrame):
         self.load_stats(str(Path(__file__).parent.joinpath("matches.json")))
 
 
-class CountsSummaryFrame(LabelFrame):
+class CountersFrame(LabelFrame):
     def __init__(self, parent, text):
         log.debug(f"creating {type(self).__name__}...")
         super().__init__(parent, text=text)
 
-    def set_stats(self, stats: StatsCollection):
+    def set_stats(self, counters: Dict[str, int]):
         for child in self.winfo_children():
             child.destroy()
 
         col_idx = 0
-        for name, count in stats.get_counters().items():
+        for name, count in counters.items():
             Label(self, text=f"{name}: ").grid(row=0, column=col_idx)
             col_idx += 1
-            Label(self, text=str(count), relief=SUNKEN).grid(row=0, column=col_idx)
+            Label(self, text=str(count), relief=RAISED).grid(row=0, column=col_idx)
             col_idx += 1
 
         for child in self.winfo_children():
@@ -91,12 +93,18 @@ class FilterSelectionFrame(LabelFrame):
 
         Button(self, text="Reset", command=self.reset_filters).grid(row=0, column=4)
 
-    def set_countries(self, *countries):
-        values = (ALL,) + tuple(countries)
+    def set_countries(self, countries):
+        values = (ALL,)
+        if countries:
+            values += tuple(countries)
+
         self.cb_country.configure(values=values)
 
-    def set_tournaments(self, *tournaments):
-        values = (ALL,) + tuple(tournaments)
+    def set_tournaments(self, tournaments):
+        values = (ALL,)
+        if tournaments:
+            values += tuple(tournaments)
+
         self.cb_tournament.configure(values=values)
 
     def apply_country_filter(self, _):
@@ -115,6 +123,51 @@ class FilterSelectionFrame(LabelFrame):
         self.cb_tournament.current(0)
 
 
+class ReportsFrame(LabelFrame):
+    REPORTS = (
+        "Daily - Simple",
+        "Daily - Fancy",
+        "Daily - Excel",
+        "Ranks - Simple",
+        "Ranks - Fancy",
+        "Ranks - Excel",
+        "Ratios - Simple",
+        "Ratios - Fancy",
+        "Ratios - Excel",
+    )
+
+    def __init__(self, parent, get_stats):
+        log.debug(f"creating {type(self).__name__}...")
+        super().__init__(parent, text="  Reports  ")
+        self.get_stats = get_stats
+
+        Label(self, text="Report type: ").grid(row=0, column=0)
+        self.combo_report = Combobox(self, values=self.REPORTS, state="readonly")
+        self.combo_report.current(0)
+        self.combo_report.grid(row=0, column=1, padx=PAD_X, pady=PAD_Y)
+        Button(self, text="View", command=self.view_report).grid(row=0, column=2)
+        Button(self, text="Save", command=self.save_report).grid(row=0, column=3)
+
+    def _get_save_report_func(self):
+        aggregation, fmt = [word.strip().lower() for word in self.combo_report.get().split("-")]
+        return getattr(reports, f"save_{aggregation}_report_{fmt}")
+
+    def view_report(self):
+        save_report = self._get_save_report_func()
+        file_ext = "xlsx" if save_report.__name__.lower().endswith("excel") else "txt"
+        out_file = file_sys.get_temp_location(f"report.{file_ext}")
+        save_report(self.get_stats(), out_file)
+        file_sys.open_file(out_file, safe=False)
+
+    def save_report(self):
+        save_report = self._get_save_report_func()
+        file_ext = "xlsx" if save_report.__name__.lower().endswith("excel") else "txt"
+        file_type = ("Text" if file_ext == "txt" else "Excel") + f" .{file_ext}"
+        out_file = asksaveasfilename(filetypes=(file_type,))
+        save_report(self.get_stats(), out_file)
+        file_sys.open_file(out_file, safe=False)
+
+
 class StatsTabFrame(Frame):
 
     def __init__(self, win, tabs):
@@ -126,29 +179,30 @@ class StatsTabFrame(Frame):
         self.stats: StatsCollection = None
         self.selection: StatsCollection = None
 
-        self.body_frame = Frame(self)
-        self.body_frame.grid(row=0, column=0, sticky=EW, padx=PAD_X, pady=PAD_Y)
+        self._body = Frame(self)
+        self._body.grid(row=0, column=0, sticky=EW, padx=PAD_X, pady=PAD_Y)
 
         # Load
-        self.load_stats_frame = LoadStatsFrame(self.body_frame, self.set_stats)
-        self.load_stats_frame.grid(row=0, column=0, padx=PAD_X, pady=PAD_Y, sticky=EW)
+        self._load_stats = LoadStatsFrame(self._body, self.set_stats)
+        self._load_stats.grid(row=0, column=0, padx=PAD_X, pady=PAD_Y, sticky=EW)
 
         # Summary
-        self.summary_frame = LabelFrame(self.body_frame, text="  Records  ")
-        self.summary_frame.grid(row=1, column=0, sticky=EW)
+        self._summary = LabelFrame(self._body, text="  Records  ")
+        self._summary.grid(row=1, column=0, sticky=EW)
 
-        self.summary_frame_all = CountsSummaryFrame(self.summary_frame, text="  All  ")
-        self.summary_frame_all.grid(row=0, column=0, padx=2 * PAD_X, pady=2 * PAD_Y, sticky=EW)
+        self._all_counters = CountersFrame(self._summary, text="  All  ")
+        self._all_counters.grid(row=0, column=0, padx=2 * PAD_X, pady=2 * PAD_Y, sticky=EW)
 
-        self.summary_frame_selection = CountsSummaryFrame(self.summary_frame, text="  Selection  ")
-        self.summary_frame_selection.grid(column=1, row=0, padx=2 * PAD_X, pady=2 * PAD_Y, sticky=EW)
+        self._selection_counters = CountersFrame(self._summary, text="  Selection  ")
+        self._selection_counters.grid(column=1, row=0, padx=2 * PAD_X, pady=2 * PAD_Y, sticky=EW)
 
         # Filter
-        self.filter_frame = FilterSelectionFrame(self.body_frame, self.get_all, self.get_selection, self.set_selection)
-        self.filter_frame.grid(row=2, column=0, sticky=EW)
+        self._filters = FilterSelectionFrame(self._body, self.get_all, self.get_selection, self.set_selection)
+        self._filters.grid(row=2, column=0, sticky=EW)
 
-        for child in self.summary_frame.winfo_children():
-            child.grid_configure(sticky=EW)
+        # Reports
+        self._reports = ReportsFrame(self._body, self.get_selection)
+        self._reports.grid(row=3, column=0, sticky=EW)
 
     def get_all(self) -> StatsCollection:
         return self.stats
@@ -158,11 +212,11 @@ class StatsTabFrame(Frame):
 
     def set_stats(self, stats: StatsCollection):
         self.stats = stats
-        self.summary_frame_all.set_stats(stats)
-        self.filter_frame.set_countries(*stats.unique_countries)
+        self._all_counters.set_stats(stats.get_counters())
+        self._filters.set_countries(stats.unique_countries)
         self.set_selection(stats)
 
     def set_selection(self, stats: StatsCollection):
         self.selection = stats
-        self.summary_frame_selection.set_stats(stats)
-        self.filter_frame.set_tournaments(*stats.unique_tournaments)
+        self._selection_counters.set_stats(stats.get_counters())
+        self._filters.set_tournaments(stats.unique_tournaments)
