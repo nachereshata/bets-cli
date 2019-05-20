@@ -257,6 +257,22 @@ class StatsCollection(AbstractStats):
                 for country, stats
                 in self.by_country().items()}
 
+    def agg_date(self) -> Dict[str, List[Dict[str, Union[int, float, str]]]]:
+        return {date: date_stats.get_matches_dicts()
+                for date, date_stats
+                in self.by_date().items()}
+
+    def agg_rank(self) -> Dict[str, List[Dict[str, Union[int, float, str]]]]:
+        return {rank: rank_stats.get_matches_dicts()
+                for rank, rank_stats
+                in self.by_rank().items()}
+
+    def agg_ratio(self: "StatsCollection") -> Dict[str, List[Dict[str, Union[int, float, str]]]]:
+        ratio_stats = self.by_ratio()
+        return {f"{ratio:.02f}": ratio_stats[ratio].get_matches_dicts()
+                for ratio
+                in sorted(ratio_stats.keys(), reverse=True)}
+
     def summary_by_date(self) -> List[Dict[str, Union[int, float, str]]]:
         stats_by_date = [dict(date=date, **stats.as_dict())
                          for date, stats
