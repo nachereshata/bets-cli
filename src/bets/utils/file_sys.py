@@ -1,13 +1,17 @@
 from functools import partial
 from multiprocessing import Process
+from pathlib import Path
+from platform import system
+from random import choice
+from shutil import copyfile, copytree
+from string import ascii_letters
 from subprocess import call
 from tempfile import gettempdir
-from pathlib import Path
-from shutil import copyfile, copytree
-from random import choice
-from string import ascii_letters
 
 from bets.utils import log
+
+IS_WIN = system() == "Windows"
+IS_LIN = system() == "Linux"
 
 
 def get_temp_location(path: str) -> str:
@@ -81,7 +85,11 @@ def open_file(file_path: str, safe=True):  # pragma: no cover
     if safe:
         file_path = copy_to_temp_location(file_path)
 
-    process = Process(target=partial(call, ["cmd", "/c", file_path]), daemon=True)
+    open_cmd = ["cmd", "/c"] if IS_WIN else (["xdg-open"] if IS_LIN else None)
+    if not open_cmd:
+        raise OSError("Unsupported system!")
+
+    process = Process(target=partial(call, open_cmd + [file_path]), daemon=True)
     process.start()
     process.join(timeout=2)
 
@@ -97,13 +105,3 @@ def view_text(text: str):
     dst_file = get_temp_location("text_view.txt")
     write_text(text, dst_file)
     open_file(dst_file, False)
-
-
-def main():  # pragma: no cover
-    log.init()
-    file = r"D:\PROJECT_HOME\f_stats\src\f_stats\storage\matches.json"
-    open_file(file)
-
-
-if __name__ == '__main__':  # pragma: no cover
-    main()
