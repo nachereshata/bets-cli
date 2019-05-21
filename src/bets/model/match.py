@@ -1,8 +1,5 @@
-import logging
-
+from bets.utils import log
 from bets.utils.num_utils import parse_float
-
-_log = logging.getLogger(__name__)
 
 
 class Match:
@@ -11,11 +8,11 @@ class Match:
     COLUMNS = ["title", "1", "X", "2", "[1]", "[X]", "[2]", "min", "med", "max", "[min]", "[med]", "[max]"]
 
     def __init__(self, title, ratio_1, ratio_x, ratio_2):
-        _log.debug("creating Match("
-                   "title={title}, "
-                   "ratio_1={ratio_1}, "
-                   "ratio_x={ratio_x}, "
-                   "ratio_2={ratio_2})...".format(title=title, ratio_1=ratio_1, ratio_x=ratio_x, ratio_2=ratio_2))
+        log.debug("creating Match("
+                  "title={title}, "
+                  "ratio_1={ratio_1}, "
+                  "ratio_x={ratio_x}, "
+                  "ratio_2={ratio_2})...".format(title=title, ratio_1=ratio_1, ratio_x=ratio_x, ratio_2=ratio_2))
 
         self.title = title
         self.ratio_1 = parse_float(ratio_1)

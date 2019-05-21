@@ -159,7 +159,7 @@ def _parse_lines(text: str) -> "Matches":
             raise ValueError("Line should contain at least 4 space-separated parts! 'title r1 rx r2'")
         title = " ".join(line_parts[:-3])
         r1, rx, r2 = line_parts[-3:]
-        return Match(title, (r1, rx, r2))
+        return Match(title, r1, rx, r2)
 
     return Matches(parse_line(line) for line in lines)
 

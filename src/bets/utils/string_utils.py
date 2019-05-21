@@ -1,4 +1,6 @@
-from typing import List
+from csv import DictWriter
+from io import StringIO
+from typing import List, Dict, Any
 from random import choice, randint
 from string import ascii_letters
 
@@ -45,3 +47,19 @@ def split_lines(text: str) -> List[str]:
 
 def randstr(min_size: int, max_size: int) -> str:
     return "".join(choice(ascii_letters) for _ in range(randint(min_size, max_size)))
+
+
+def csv_from_dicts(dicts: List[Dict[str, Any]], columns: List[str] = None):
+    if not dicts:
+        raise ValueError("Empty list!")
+
+    columns = columns or list(dicts[0].keys())
+
+    buffer = StringIO()
+    writer = DictWriter(buffer, fieldnames=columns, extrasaction="ignore")
+
+    writer.writeheader()
+    for item in dicts:
+        writer.writerow(item)
+
+    return buffer.getvalue()
