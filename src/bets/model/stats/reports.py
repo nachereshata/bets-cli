@@ -3,7 +3,7 @@ from typing import List
 from tabulate import tabulate
 
 from bets.model.stats.stats_collection import StatsCollection
-from bets.utils import file_sys, excel_util
+from bets.utils import sys_util, excel_util
 
 TABLE_FMT = {True: "simple", False: "fancy_grid", None: "fancy_grid", }
 
@@ -29,11 +29,11 @@ def prepare_daily_report(stats: StatsCollection, simple=True) -> str:
 
 
 def save_daily_report_simple(stats: StatsCollection, file: str):
-    file_sys.write_text(prepare_daily_report(stats, simple=True), file)
+    sys_util.write_text(prepare_daily_report(stats, simple=True), file)
 
 
 def save_daily_report_fancy(stats: StatsCollection, file: str):
-    file_sys.write_text(prepare_daily_report(stats, simple=False), file)
+    sys_util.write_text(prepare_daily_report(stats, simple=False), file)
 
 
 def save_daily_report_excel(stats: StatsCollection, file: str):
@@ -51,11 +51,11 @@ def prepare_ranks_report(stats: StatsCollection, simple=True) -> str:
 
 
 def save_ranks_report_simple(stats: StatsCollection, file: str):
-    file_sys.write_text(prepare_ranks_report(stats, simple=True), file)
+    sys_util.write_text(prepare_ranks_report(stats, simple=True), file)
 
 
 def save_ranks_report_fancy(stats: StatsCollection, file: str):
-    file_sys.write_text(prepare_ranks_report(stats, simple=False), file)
+    sys_util.write_text(prepare_ranks_report(stats, simple=False), file)
 
 
 def save_ranks_report_excel(stats: StatsCollection, file: str):
@@ -74,11 +74,11 @@ def prepare_ratios_report(stats: StatsCollection, simple=True) -> str:
 
 
 def save_ratios_report_simple(stats: StatsCollection, file: str):
-    file_sys.write_text(prepare_ratios_report(stats, simple=True), file)
+    sys_util.write_text(prepare_ratios_report(stats, simple=True), file)
 
 
 def save_ratios_report_fancy(stats: StatsCollection, file: str):
-    file_sys.write_text(prepare_ratios_report(stats, simple=False), file)
+    sys_util.write_text(prepare_ratios_report(stats, simple=False), file)
 
 
 def save_ratios_report_excel(stats: StatsCollection, file: str):

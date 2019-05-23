@@ -8,7 +8,7 @@ from bets.model.scenarios import Scenarios
 from bets.ui.constants import PAD_X, PAD_Y
 from bets.ui.scenarios_tab.filter_frames import TotalOccurrencesFilterFrame, SequentialOccurrencesFilterFrame
 from bets.utils import log
-from bets.utils.file_sys import open_file
+from bets.utils.sys_util import open_file
 
 
 def _get_from_to_values(text: str, max_value: int):

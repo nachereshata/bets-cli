@@ -10,7 +10,7 @@ from typing import Dict
 from bets.model.stats import reports
 from bets.model.stats.stats_collection import StatsCollection
 from bets.ui.constants import PAD_X, PAD_Y
-from bets.utils import log, file_sys
+from bets.utils import log, sys_util
 
 ALL = "All"
 
@@ -155,9 +155,9 @@ class ReportsFrame(LabelFrame):
     def view_report(self):
         save_report = self._get_save_report_func()
         file_ext = "xlsx" if save_report.__name__.lower().endswith("excel") else "txt"
-        out_file = file_sys.get_temp_location(f"report.{file_ext}")
+        out_file = sys_util.get_tmp_location(f"report.{file_ext}")
         save_report(self.get_stats(), out_file)
-        file_sys.open_file(out_file, safe=False)
+        sys_util.open_file(out_file, make_copy=False)
 
     def save_report(self):
         save_report = self._get_save_report_func()
@@ -165,7 +165,7 @@ class ReportsFrame(LabelFrame):
         file_type = ("Text" if file_ext == "txt" else "Excel") + f" .{file_ext}"
         out_file = asksaveasfilename(filetypes=(file_type,))
         save_report(self.get_stats(), out_file)
-        file_sys.open_file(out_file, safe=False)
+        sys_util.open_file(out_file, make_copy=False)
 
 
 class StatsTabFrame(Frame):

@@ -1,10 +1,9 @@
+from datetime import datetime
 from functools import partial
 from multiprocessing import Process
 from pathlib import Path
 from platform import system
-from random import choice
 from shutil import copyfile, copytree
-from string import ascii_letters
 from subprocess import call
 from tempfile import gettempdir
 
@@ -14,14 +13,29 @@ IS_WIN = system() == "Windows"
 IS_LIN = system() == "Linux"
 
 
-def get_temp_location(path: str) -> str:
+def is_windows() -> bool:
+    return system() == "Windows"
+
+
+def is_linux() -> bool:
+    return system() == "Linux"
+
+
+def is_file(path) -> bool:
+    return bool(Path(path).suffix)
+
+
+def get_utc_timestamp() -> str:
+    return datetime.utcnow().strftime('%Y-%m-%d_%H_%M_%S_%f')
+
+
+def get_tmp_location(path: str) -> str:
     log.debug(f"getting temp location for: [{path}]")
 
-    path = Path(path).absolute()
-    log.debug(f"got absolute path: [{str(path)}]")
+    src_path = Path(path)
+    log.debug(f"got src path: [{str(src_path)}]")
 
-    tmp_name = "tmp_" + "".join([choice(ascii_letters) for _ in range(8)]) + "_" + path.name
-    tmp_path = str(Path(gettempdir()).absolute().joinpath(tmp_name))
+    tmp_path = str(Path(gettempdir()).joinpath("".join([src_path.stem, "_tmp_", get_utc_timestamp(), src_path.suffix])))
     log.debug(f"got temp location: [{tmp_path}]")
 
     return tmp_path
@@ -50,12 +64,12 @@ def delete(path: str):
 
 def copy(src_path: str, dst_path: str, exists_ok=False) -> str:
     log.debug(f"copying file or dir from [{src_path}] to [{dst_path}]")
+
     src_path = Path(src_path).absolute()
     if not src_path.exists():  # pragma: no cover
         raise FileNotFoundError(str(src_path))
 
     dst_path = Path(dst_path).absolute()
-
     if dst_path.exists():  # pragma: no cover
         if exists_ok:
             delete(str(dst_path))
@@ -71,19 +85,17 @@ def copy(src_path: str, dst_path: str, exists_ok=False) -> str:
         return copytree(str(src_path), str(dst_path))
 
 
-def copy_to_temp_location(path: str) -> str:
-    src_path = Path(path).absolute()
-    dst_path = Path(get_temp_location(path))
-
+def copy_to_tmp(src_path: str) -> str:
+    dst_path = get_tmp_location(src_path)
     log.debug(f"copying [{str(src_path)}] to temp location: [{str(dst_path)}]...")
     return copy(str(src_path), str(dst_path), exists_ok=True)
 
 
-def open_file(file_path: str, safe=True):  # pragma: no cover
-    """Makes a temp copy of a file and opens it with the system default handler"""
+def open_file(file_path: str, make_copy=True):  # pragma: no cover
+    """Opens the file with the system default program handler for the type"""
 
-    if safe:
-        file_path = copy_to_temp_location(file_path)
+    if make_copy:
+        file_path = copy_to_tmp(file_path)
 
     open_cmd = ["cmd", "/c"] if IS_WIN else (["xdg-open"] if IS_LIN else None)
     if not open_cmd:
@@ -102,6 +114,6 @@ def write_text(text: str, file: str):
 
 
 def view_text(text: str):
-    dst_file = get_temp_location("text_view.txt")
+    dst_file = get_tmp_location("text_view.txt")
     write_text(text, dst_file)
     open_file(dst_file, False)
