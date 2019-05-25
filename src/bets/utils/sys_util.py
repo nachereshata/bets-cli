@@ -63,7 +63,7 @@ def delete(path: str):
 
 
 def copy(src_path: str, dst_path: str, exists_ok=False) -> str:
-    log.debug(f"copying file or dir from [{src_path}] to [{dst_path}]")
+    log.debug(f"copying from [{src_path}] to [{dst_path}]")
 
     src_path = Path(src_path).absolute()
     if not src_path.exists():  # pragma: no cover

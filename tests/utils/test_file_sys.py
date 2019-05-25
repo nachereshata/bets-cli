@@ -1,7 +1,7 @@
 from pathlib import Path
 from tempfile import gettempdir
 
-from bets.utils import file_sys
+from bets.utils import sys_util
 from bets.utils import log
 
 log.init()
@@ -11,7 +11,7 @@ FILE_NAME = FILE_PATH.name
 
 
 def test_get_temp_location():
-    temp_file = Path(file_sys.get_temp_location(str(FILE_PATH)))
+    temp_file = Path(sys_util.get_tmp_location(str(FILE_PATH)))
     assert temp_file.parent == Path(gettempdir())
     assert temp_file.name.startswith("tmp_")
     assert temp_file.name.endswith(FILE_NAME)
@@ -32,14 +32,14 @@ def test_delete():
         inner_file.write_text("msome_Text", encoding="utf-8")
 
     log.debug(f"created temp dir structure at: {tmp_dir}")
-    file_sys.delete(str(tmp_dir))
+    sys_util.delete(str(tmp_dir))
 
     assert not tmp_dir.exists()
 
 
 def test_copy_to_tmp_location_file():
     src_file = Path(__file__).absolute()
-    dst_file = Path(file_sys.copy_to_temp_location(str(src_file)))
+    dst_file = Path(sys_util.copy_to_tmp(str(src_file)))
     src_bytes = src_file.read_bytes()
     dst_bytes = dst_file.read_bytes()
     assert dst_bytes == src_bytes

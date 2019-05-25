@@ -1,10 +1,10 @@
-from bets.utils import file_sys, excel_util, log
+from bets.utils import sys_util, excel_util, log
 
 log.init()
 
 
 def test_read_write():
-    output_file = file_sys.get_temp_location("sheets_output")
+    output_file = sys_util.get_tmp_location("sheets_output")
     output_data = {
         "Sheet1": [{"s1col_0": "s1row_0 col_0", "s1col_1": 1},
                    {"s1col_0": "s1row_1 col_0", "s1col_1": 2.5}],
